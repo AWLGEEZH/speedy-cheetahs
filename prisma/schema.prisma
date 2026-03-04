@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── AUTH & TEAM ─────────────────────────────────────
+
+model Coach {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         CoachRole @default(ASSISTANT)
+  phone        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  updates          Update[]
+  coachingSessions CoachingSession[]
+}
+
+enum CoachRole {
+  HEAD
+  ASSISTANT
+}
+
+model Team {
+  id         String   @id @default(cuid())
+  name       String   @default("Speedy Cheetahs")
+  league     String   @default("Farm-1")
+  season     String
+  shareToken String   @unique @default(cuid())
+  rulesText  String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ─── PLAYERS & FAMILIES ────────────────────────────────
+
+model Family {
+  id         String  @id @default(cuid())
+  parentName String
+  email      String?
+  phone      String
+  smsOptIn   Boolean @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  players          Player[]
+  volunteerSignups VolunteerSignup[]
+  attendanceRsvps  AttendanceRsvp[]
+}
+
+model Player {
+  id           String  @id @default(cuid())
+  firstName    String
+  lastName     String
+  jerseyNumber Int?
+  notes        String? @db.Text
+  familyId     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  family          Family           @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  battingEntries  BattingEntry[]
+  fieldingEntries FieldingEntry[]
+  attendanceRsvps AttendanceRsvp[]
+
+  @@index([familyId])
+}
+
+// ─── SCHEDULE & EVENTS ─────────────────────────────────
+
+model Event {
+  id              String    @id @default(cuid())
+  type            EventType
+  title           String
+  opponent        String?
+  date            DateTime
+  endTime         DateTime?
+  locationName    String
+  locationAddress String?
+  notes           String?   @db.Text
+  isCancelled     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  volunteerRoles  VolunteerRole[]
+  updates         Update[]
+  gameState       GameState?
+  attendanceRsvps AttendanceRsvp[]
+}
+
+enum EventType {
+  GAME
+  PRACTICE
+  OTHER
+}
+
+// ─── UPDATES & NOTIFICATIONS ───────────────────────────
+
+model Update {
+  id        String   @id @default(cuid())
+  title     String
+  message   String   @db.Text
+  smsSent   Boolean  @default(false)
+  smsCount  Int      @default(0)
+  eventId   String?
+  coachId   String
+  createdAt DateTime @default(now())
+
+  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  coach Coach  @relation(fields: [coachId], references: [id])
+
+  @@index([eventId])
+  @@index([coachId])
+}
+
+// ─── VOLUNTEER MANAGEMENT ──────────────────────────────
+
+model VolunteerRole {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  slotsNeeded Int     @default(1)
+  eventId     String
+  createdAt   DateTime @default(now())
+
+  event   Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  signups VolunteerSignup[]
+
+  @@index([eventId])
+}
+
+model VolunteerSignup {
+  id        String   @id @default(cuid())
+  familyId  String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  family Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  role   VolunteerRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, roleId])
+  @@index([roleId])
+}
+
+// ─── GAME DAY ──────────────────────────────────────────
+
+model GameState {
+  id                 String     @id @default(cuid())
+  eventId            String     @unique
+  currentInning      Int        @default(1)
+  isTopInning        Boolean    @default(true)
+  currentBatterIndex Int        @default(0)
+  totalOuts          Int        @default(0)
+  status             GameStatus @default(NOT_STARTED)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  event           Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  battingEntries  BattingEntry[]
+  fieldingEntries FieldingEntry[]
+}
+
+enum GameStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model AttendanceRsvp {
+  id       String           @id @default(cuid())
+  eventId  String
+  playerId String
+  familyId String
+  status   AttendanceStatus @default(PENDING)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, playerId])
+  @@index([eventId])
+}
+
+enum AttendanceStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
+model BattingEntry {
+  id           String   @id @default(cuid())
+  gameStateId  String
+  playerId     String
+  battingOrder Int
+  atBatCount   Int      @default(0)
+  currentAtBat Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  gameState GameState @relation(fields: [gameStateId], references: [id], onDelete: Cascade)
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([gameStateId, playerId])
+  @@unique([gameStateId, battingOrder])
+  @@index([gameStateId])
+}
+
+model FieldingEntry {
+  id           String        @id @default(cuid())
+  gameStateId  String
+  playerId     String
+  inning       Int
+  position     FieldPosition
+  outsRecorded Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  gameState GameState @relation(fields: [gameStateId], references: [id], onDelete: Cascade)
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([gameStateId, playerId, inning])
+  @@index([gameStateId])
+  @@index([playerId])
+}
+
+enum FieldPosition {
+  PITCHER
+  CATCHER
+  FIRST_BASE
+  SECOND_BASE
+  THIRD_BASE
+  SHORTSTOP
+  LEFT_FIELD
+  CENTER_FIELD
+  RIGHT_FIELD
+  LEFT_CENTER
+  RIGHT_CENTER
+  BENCH
+}
+
+// ─── AI COACHING ───────────────────────────────────────
+
+model CoachingSession {
+  id             String   @id @default(cuid())
+  coachId        String
+  goals          String   @db.Text
+  observations   String   @db.Text
+  focusArea      String?
+  recommendation String   @db.Text
+  createdAt      DateTime @default(now())
+
+  coach Coach @relation(fields: [coachId], references: [id])
+
+  @@index([coachId])
+}
