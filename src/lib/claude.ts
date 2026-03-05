@@ -10,7 +10,8 @@ function getClient() {
 
 export async function queryRules(
   rulesText: string,
-  question: string
+  question: string,
+  knowledgeBaseContext?: string
 ): Promise<string> {
   const client = getClient();
 
@@ -26,7 +27,7 @@ Use bullet points and short paragraphs for easy reading during games.`,
     messages: [
       {
         role: "user",
-        content: `Here are the league rules:\n\n${rulesText}\n\n---\n\nQuestion: ${question}`,
+        content: `Here are the league rules:\n\n${rulesText}\n\n${knowledgeBaseContext ? `---\n\nAdditional coaching knowledge base:\n\n${knowledgeBaseContext}\n\n` : ""}---\n\nQuestion: ${question}`,
       },
     ],
   });
@@ -38,7 +39,8 @@ Use bullet points and short paragraphs for easy reading during games.`,
 export async function generatePracticePlan(
   goals: string,
   observations: string,
-  focusArea?: string
+  focusArea?: string,
+  knowledgeBaseContext?: string
 ): Promise<string> {
   const client = getClient();
 
@@ -60,7 +62,7 @@ Include coaching tips for each drill.`,
 Player observations: ${observations}
 
 ${focusArea ? `Focus area: ${focusArea}` : ""}
-
+${knowledgeBaseContext ? `\nAdditional coaching knowledge base:\n\n${knowledgeBaseContext}\n` : ""}
 Please generate a 60-minute practice plan for 16 first-grade boys.`,
       },
     ],
@@ -68,4 +70,30 @@ Please generate a 60-minute practice plan for 16 first-grade boys.`,
 
   const block = message.content[0];
   return block.type === "text" ? block.text : "";
+}
+
+export async function getKnowledgeBaseContext(): Promise<string | undefined> {
+  const { prisma } = await import("@/lib/prisma");
+  const entries = await prisma.knowledgeBase.findMany({
+    select: { title: true, type: true, content: true },
+    orderBy: { createdAt: "desc" },
+  });
+  if (entries.length === 0) return undefined;
+
+  const MAX_TOTAL_CHARS = 50000;
+  let total = 0;
+  const parts: string[] = [];
+
+  for (const entry of entries) {
+    const header = `[${entry.type}] ${entry.title}:`;
+    const available = MAX_TOTAL_CHARS - total - header.length - 4;
+    if (available <= 0) break;
+    const content = entry.content.length > available
+      ? entry.content.slice(0, available) + "..."
+      : entry.content;
+    parts.push(`${header}\n${content}`);
+    total += header.length + content.length + 2;
+  }
+
+  return parts.join("\n\n---\n\n");
 }

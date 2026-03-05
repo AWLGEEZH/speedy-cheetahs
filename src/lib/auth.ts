@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
 if (!process.env.AUTH_SECRET) {
   throw new Error("AUTH_SECRET environment variable is required");
@@ -53,6 +54,18 @@ export async function requireAuth(): Promise<{ coachId: string }> {
   const session = await getSession();
   if (!session) {
     throw new Error("Unauthorized");
+  }
+  return session;
+}
+
+export async function requireHeadCoach(): Promise<{ coachId: string }> {
+  const session = await requireAuth();
+  const coach = await prisma.coach.findUnique({
+    where: { id: session.coachId },
+    select: { role: true },
+  });
+  if (!coach || coach.role !== "HEAD") {
+    throw new Error("Forbidden");
   }
   return session;
 }

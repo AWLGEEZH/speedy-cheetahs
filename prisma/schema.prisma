@@ -21,6 +21,7 @@ model Coach {
 
   updates          Update[]
   coachingSessions CoachingSession[]
+  knowledgeBase    KnowledgeBase[]
 }
 
 enum CoachRole {
@@ -114,7 +115,7 @@ model Update {
   createdAt DateTime @default(now())
 
   event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  coach Coach  @relation(fields: [coachId], references: [id])
+  coach Coach  @relation(fields: [coachId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
   @@index([coachId])
@@ -258,7 +259,29 @@ model CoachingSession {
   recommendation String   @db.Text
   createdAt      DateTime @default(now())
 
-  coach Coach @relation(fields: [coachId], references: [id])
+  coach Coach @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([coachId])
+}
+
+// ─── AI KNOWLEDGE BASE ────────────────────────────────
+
+enum KBType {
+  PDF
+  URL
+  TEXT
+}
+
+model KnowledgeBase {
+  id        String   @id @default(cuid())
+  title     String
+  type      KBType
+  sourceUrl String?
+  content   String   @db.Text
+  coachId   String
+  createdAt DateTime @default(now())
+
+  coach Coach @relation(fields: [coachId], references: [id], onDelete: Cascade)
 
   @@index([coachId])
 }

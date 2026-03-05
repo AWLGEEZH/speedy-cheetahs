@@ -120,3 +120,24 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
 }
+
+export interface CoachInfo {
+  id: string;
+  name: string;
+  email: string;
+  role: CoachRole;
+  phone: string | null;
+  createdAt: string;
+}
+
+export type KBType = "PDF" | "URL" | "TEXT";
+
+export interface KnowledgeBaseEntry {
+  id: string;
+  title: string;
+  type: KBType;
+  sourceUrl: string | null;
+  contentPreview: string;
+  coachName: string;
+  createdAt: string;
+}

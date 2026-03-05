@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
-import { generatePracticePlan } from "@/lib/claude";
+import { generatePracticePlan, getKnowledgeBaseContext } from "@/lib/claude";
 import { coachingRequestSchema } from "@/lib/validators";
 
 export async function GET() {
@@ -31,10 +31,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
+    const kbContext = await getKnowledgeBaseContext();
     const recommendation = await generatePracticePlan(
       parsed.data.goals,
       parsed.data.observations,
-      parsed.data.focusArea
+      parsed.data.focusArea,
+      kbContext
     );
 
     const coachingSession = await prisma.coachingSession.create({

@@ -7,17 +7,28 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { BookOpen, MessageCircle, Save } from "lucide-react";
+import { BookOpen, MessageCircle, Save, Database, Trash2, FileText, Link, FileUp } from "lucide-react";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
 }
 
+interface KbEntry {
+  id: string;
+  title: string;
+  type: "TEXT" | "URL" | "PDF";
+  content?: string;
+  sourceUrl?: string;
+  coach?: { name: string };
+  createdAt: string;
+}
+
 function RulesContent() {
-  const [tab, setTab] = useState<"editor" | "chat">("editor");
+  const [tab, setTab] = useState<"editor" | "chat" | "knowledge">("editor");
   const [rulesText, setRulesText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,6 +37,15 @@ function RulesContent() {
   const [asking, setAsking] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { addToast } = useToast();
+
+  // Knowledge Base state
+  const [kbEntries, setKbEntries] = useState<KbEntry[]>([]);
+  const [kbType, setKbType] = useState<"TEXT" | "URL" | "PDF">("TEXT");
+  const [kbTitle, setKbTitle] = useState("");
+  const [kbContent, setKbContent] = useState("");
+  const [kbUrl, setKbUrl] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [kbLoading, setKbLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -42,6 +62,23 @@ function RulesContent() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Load KB entries when switching to knowledge tab or on mount
+  useEffect(() => {
+    if (tab === "knowledge") {
+      loadKbEntries();
+    }
+  }, [tab]);
+
+  async function loadKbEntries() {
+    try {
+      const res = await fetch("/api/knowledge");
+      if (res.ok) {
+        const data = await res.json();
+        setKbEntries(Array.isArray(data) ? data : []);
+      }
+    } catch { /* ignore */ }
+  }
 
   async function saveRules() {
     setSaving(true);
@@ -86,6 +123,113 @@ function RulesContent() {
     }
   }
 
+  // Knowledge Base handlers
+  function clearKbForm() {
+    setKbTitle("");
+    setKbContent("");
+    setKbUrl("");
+    setPdfFile(null);
+  }
+
+  async function addText() {
+    if (!kbTitle.trim() || !kbContent.trim()) {
+      addToast("Title and content are required", "error");
+      return;
+    }
+    setKbLoading(true);
+    try {
+      const res = await fetch("/api/knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "TEXT", title: kbTitle, content: kbContent }),
+      });
+      if (res.ok) {
+        addToast("Knowledge entry added", "success");
+        clearKbForm();
+        loadKbEntries();
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to add entry", "error");
+      }
+    } catch {
+      addToast("Failed to add entry", "error");
+    } finally {
+      setKbLoading(false);
+    }
+  }
+
+  async function addUrl() {
+    if (!kbTitle.trim() || !kbUrl.trim()) {
+      addToast("Title and URL are required", "error");
+      return;
+    }
+    setKbLoading(true);
+    try {
+      const res = await fetch("/api/knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "URL", title: kbTitle, sourceUrl: kbUrl }),
+      });
+      if (res.ok) {
+        addToast("URL content fetched and added", "success");
+        clearKbForm();
+        loadKbEntries();
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to fetch URL", "error");
+      }
+    } catch {
+      addToast("Failed to fetch URL", "error");
+    } finally {
+      setKbLoading(false);
+    }
+  }
+
+  async function uploadPdf() {
+    if (!pdfFile || !kbTitle.trim()) {
+      addToast("Title and PDF file are required", "error");
+      return;
+    }
+    setKbLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", pdfFile);
+      formData.append("title", kbTitle);
+      const res = await fetch("/api/knowledge", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        addToast("PDF uploaded and processed", "success");
+        clearKbForm();
+        loadKbEntries();
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to upload PDF", "error");
+      }
+    } catch {
+      addToast("Failed to upload PDF", "error");
+    } finally {
+      setKbLoading(false);
+    }
+  }
+
+  async function deleteKbEntry(id: string) {
+    if (!window.confirm("Delete this knowledge base entry?")) return;
+    try {
+      const res = await fetch(`/api/knowledge/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        addToast("Entry deleted", "success");
+        setKbEntries((prev) => prev.filter((e) => e.id !== id));
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to delete entry", "error");
+      }
+    } catch {
+      addToast("Failed to delete entry", "error");
+    }
+  }
+
   return (
     <CoachLayout>
       <PageHeader title="Rules & AI Assistant" subtitle="League rules with AI-powered lookup" />
@@ -104,6 +248,13 @@ function RulesContent() {
           onClick={() => setTab("chat")}
         >
           <MessageCircle className="h-4 w-4 mr-1" /> Ask AI
+        </Button>
+        <Button
+          variant={tab === "knowledge" ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setTab("knowledge")}
+        >
+          <Database className="h-4 w-4 mr-1" /> Knowledge Base
         </Button>
       </div>
 
@@ -128,7 +279,7 @@ function RulesContent() {
             />
           </CardContent>
         </Card>
-      ) : (
+      ) : tab === "chat" ? (
         <Card className="flex flex-col" style={{ height: "calc(100vh - 250px)" }}>
           <CardContent className="flex-1 overflow-y-auto py-4 space-y-3 scrollbar-thin">
             {messages.length === 0 && (
@@ -174,6 +325,163 @@ function RulesContent() {
             </form>
           </div>
         </Card>
+      ) : (
+        /* Knowledge Base Tab */
+        <div className="space-y-4">
+          {/* Add Entry Section */}
+          <Card>
+            <CardHeader>
+              <h3 className="font-semibold text-sm">Add Knowledge Entry</h3>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Type Selector */}
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={kbType === "TEXT" ? "primary" : "outline"}
+                  onClick={() => setKbType("TEXT")}
+                >
+                  <FileText className="h-4 w-4 mr-1" /> Text
+                </Button>
+                <Button
+                  size="sm"
+                  variant={kbType === "URL" ? "primary" : "outline"}
+                  onClick={() => setKbType("URL")}
+                >
+                  <Link className="h-4 w-4 mr-1" /> URL
+                </Button>
+                <Button
+                  size="sm"
+                  variant={kbType === "PDF" ? "primary" : "outline"}
+                  onClick={() => setKbType("PDF")}
+                >
+                  <FileUp className="h-4 w-4 mr-1" /> PDF
+                </Button>
+              </div>
+
+              {/* Title (shared across all types) */}
+              <Input
+                label="Title"
+                value={kbTitle}
+                onChange={(e) => setKbTitle(e.target.value)}
+                placeholder="Entry title"
+                required
+              />
+
+              {/* Type-specific form fields */}
+              {kbType === "TEXT" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">Content</label>
+                    <Textarea
+                      value={kbContent}
+                      onChange={(e) => setKbContent(e.target.value)}
+                      placeholder="Paste or type knowledge content..."
+                      className="min-h-[150px] text-sm"
+                    />
+                  </div>
+                  <Button size="sm" onClick={addText} disabled={kbLoading}>
+                    {kbLoading ? <><Spinner size="sm" /> Adding...</> : "Add"}
+                  </Button>
+                </>
+              )}
+
+              {kbType === "URL" && (
+                <>
+                  <Input
+                    label="URL"
+                    type="url"
+                    value={kbUrl}
+                    onChange={(e) => setKbUrl(e.target.value)}
+                    placeholder="https://example.com/article"
+                    required
+                  />
+                  <Button size="sm" onClick={addUrl} disabled={kbLoading}>
+                    {kbLoading ? <><Spinner size="sm" /> Fetching...</> : "Fetch & Add"}
+                  </Button>
+                </>
+              )}
+
+              {kbType === "PDF" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">PDF File</label>
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:opacity-90"
+                    />
+                  </div>
+                  <Button size="sm" onClick={uploadPdf} disabled={kbLoading}>
+                    {kbLoading ? <><Spinner size="sm" /> Uploading...</> : "Upload"}
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Entries List */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm text-gray-700">
+              Existing Entries ({kbEntries.length})
+            </h3>
+
+            {kbEntries.length === 0 ? (
+              <Card>
+                <CardContent>
+                  <p className="text-sm text-muted text-center py-6">
+                    No knowledge base entries yet. Add PDFs, URLs, or text to enhance AI responses.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              kbEntries.map((entry) => (
+                <Card key={entry.id}>
+                  <CardContent className="py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm">{entry.title}</span>
+                          <Badge
+                            variant={
+                              entry.type === "PDF"
+                                ? "info"
+                                : entry.type === "URL"
+                                ? "success"
+                                : "default"
+                            }
+                          >
+                            {entry.type}
+                          </Badge>
+                        </div>
+                        {entry.content && (
+                          <p className="text-xs text-gray-600 mb-1">
+                            {entry.content.length > 150
+                              ? entry.content.substring(0, 150) + "..."
+                              : entry.content}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted">
+                          Added by {entry.coach?.name || "Unknown"} on{" "}
+                          {new Date(entry.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-danger hover:text-red-700"
+                        onClick={() => deleteKbEntry(entry.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
       )}
     </CoachLayout>
   );

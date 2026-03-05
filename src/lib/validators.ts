@@ -116,3 +116,27 @@ export const coachingRequestSchema = z.object({
 export const saveRulesSchema = z.object({
   rulesText: z.string().max(50000),
 });
+
+export const createCoachSchema = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email(),
+  password: z.string().min(6).max(100),
+  phone: z.string().max(20).optional(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(6).max(100),
+});
+
+export const createKBTextSchema = z.object({
+  title: z.string().min(1).max(200),
+  type: z.literal("TEXT"),
+  content: z.string().min(1).max(100000),
+});
+
+export const createKBUrlSchema = z.object({
+  title: z.string().min(1).max(200),
+  type: z.literal("URL"),
+  sourceUrl: z.string().url().max(2000),
+});

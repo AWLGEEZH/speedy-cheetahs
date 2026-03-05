@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
-import { queryRules } from "@/lib/claude";
+import { queryRules, getKnowledgeBaseContext } from "@/lib/claude";
 import { rulesQuerySchema } from "@/lib/validators";
 
 export async function POST(request: Request) {
@@ -22,7 +22,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const answer = await queryRules(team.rulesText, parsed.data.question);
+    const kbContext = await getKnowledgeBaseContext();
+    const answer = await queryRules(team.rulesText, parsed.data.question, kbContext);
     return NextResponse.json({ answer });
   } catch (e) {
     if (e instanceof Error && e.message === "Unauthorized") {
