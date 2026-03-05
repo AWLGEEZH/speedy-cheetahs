@@ -96,7 +96,16 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
         }
 
-        const rawContent = await extractTextFromUrl(parsed.data.sourceUrl);
+        let rawContent: string;
+        try {
+          rawContent = await extractTextFromUrl(parsed.data.sourceUrl);
+        } catch (fetchError) {
+          const msg = fetchError instanceof Error ? fetchError.message : "Unknown error";
+          return NextResponse.json(
+            { error: `Failed to fetch URL: ${msg}` },
+            { status: 422 }
+          );
+        }
         const content = rawContent.slice(0, 100000);
 
         const entry = await prisma.knowledgeBase.create({
