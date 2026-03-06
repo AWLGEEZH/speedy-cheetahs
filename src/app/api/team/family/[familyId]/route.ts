@@ -78,6 +78,9 @@ export async function PUT(
         ...(parsed.data.smsOptIn !== undefined && {
           smsOptIn: parsed.data.smsOptIn,
         }),
+        ...(parsed.data.emailOptIn !== undefined && {
+          emailOptIn: parsed.data.emailOptIn,
+        }),
       },
       include: {
         players: {

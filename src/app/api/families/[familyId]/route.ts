@@ -44,6 +44,7 @@ export async function PUT(
         ...(parsed.data.email !== undefined && { email: parsed.data.email || null }),
         ...(parsed.data.phone !== undefined && { phone: normalizePhone(parsed.data.phone) }),
         ...(parsed.data.smsOptIn !== undefined && { smsOptIn: parsed.data.smsOptIn }),
+        ...(parsed.data.emailOptIn !== undefined && { emailOptIn: parsed.data.emailOptIn }),
       },
     });
     return NextResponse.json(family);
