@@ -6,12 +6,13 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatPhone } from "@/lib/utils";
 import type { PlayerWithFamily } from "@/types";
-import { Plus, X, UserCircle } from "lucide-react";
+import { Plus, X, UserCircle, Edit2 } from "lucide-react";
 
 function RosterContent() {
   const [players, setPlayers] = useState<PlayerWithFamily[]>([]);
@@ -21,6 +22,15 @@ function RosterContent() {
   const [showAddFamily, setShowAddFamily] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", jerseyNumber: "", familyId: "" });
   const [familyForm, setFamilyForm] = useState({ parentName: "", phone: "", email: "" });
+
+  // Edit state
+  const [editingPlayer, setEditingPlayer] = useState<PlayerWithFamily | null>(null);
+  const [editForm, setEditForm] = useState({
+    firstName: "", lastName: "", jerseyNumber: "", notes: "",
+    parentName: "", email: "", phone: "",
+  });
+  const [saving, setSaving] = useState(false);
+
   const { addToast } = useToast();
 
   async function load() {
@@ -80,12 +90,67 @@ function RosterContent() {
     addToast("Player removed", "success");
   }
 
+  function startEdit(player: PlayerWithFamily) {
+    setEditingPlayer(player);
+    setEditForm({
+      firstName: player.firstName,
+      lastName: player.lastName,
+      jerseyNumber: player.jerseyNumber != null ? String(player.jerseyNumber) : "",
+      notes: player.notes || "",
+      parentName: player.family.parentName,
+      email: player.family.email || "",
+      phone: formatPhone(player.family.phone),
+    });
+    setShowAddPlayer(false);
+    setShowAddFamily(false);
+  }
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingPlayer) return;
+    setSaving(true);
+    try {
+      const [playerRes, familyRes] = await Promise.all([
+        fetch(`/api/players/${editingPlayer.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: editForm.firstName,
+            lastName: editForm.lastName,
+            jerseyNumber: editForm.jerseyNumber ? parseInt(editForm.jerseyNumber) : null,
+            notes: editForm.notes || null,
+          }),
+        }),
+        fetch(`/api/families/${editingPlayer.familyId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            parentName: editForm.parentName,
+            email: editForm.email || "",
+            phone: editForm.phone,
+          }),
+        }),
+      ]);
+      if (playerRes.ok && familyRes.ok) {
+        await load();
+        setEditingPlayer(null);
+        addToast("Player updated", "success");
+      } else {
+        addToast("Failed to save changes", "error");
+      }
+    } catch {
+      addToast("Failed to save changes", "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <CoachLayout>
       <PageHeader
         title="Roster"
         subtitle={`${players.length} players`}
-        action={{ label: "+ Add Player", onClick: () => setShowAddPlayer(true) }}
+        action={{ label: "+ Add Player", onClick: () => { setShowAddPlayer(true); setEditingPlayer(null); } }}
       />
 
       {/* Add family modal */}
@@ -107,7 +172,7 @@ function RosterContent() {
       )}
 
       {/* Add player modal */}
-      {showAddPlayer && (
+      {showAddPlayer && !editingPlayer && (
         <Card className="mb-4 border-primary">
           <CardContent className="py-4">
             <div className="flex justify-between mb-3">
@@ -145,6 +210,63 @@ function RosterContent() {
         </Card>
       )}
 
+      {/* Edit player modal */}
+      {editingPlayer && (
+        <Card className="mb-4 border-primary">
+          <CardContent className="py-4">
+            <div className="flex justify-between mb-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Edit2 className="h-4 w-4" />
+                Edit: {editingPlayer.firstName} {editingPlayer.lastName}
+              </h3>
+              <button onClick={() => setEditingPlayer(null)}><X className="h-4 w-4" /></button>
+            </div>
+            <form onSubmit={saveEdit} className="space-y-4">
+              {/* Player Info Section */}
+              <div>
+                <p className="text-xs font-medium text-muted mb-2 uppercase tracking-wide">Player Info</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input label="First Name" value={editForm.firstName}
+                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} required />
+                  <Input label="Last Name" value={editForm.lastName}
+                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} required />
+                </div>
+                <div className="mt-3">
+                  <Input label="Jersey #" type="number" value={editForm.jerseyNumber}
+                    onChange={(e) => setEditForm({ ...editForm, jerseyNumber: e.target.value })} />
+                </div>
+                <div className="mt-3">
+                  <Textarea label="Notes" value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    placeholder="Allergies, medical info, etc." />
+                </div>
+              </div>
+
+              {/* Family/Parent Info Section */}
+              <div>
+                <p className="text-xs font-medium text-muted mb-2 uppercase tracking-wide">Parent / Guardian Info</p>
+                <div className="space-y-3">
+                  <Input label="Parent Name" value={editForm.parentName}
+                    onChange={(e) => setEditForm({ ...editForm, parentName: e.target.value })} required />
+                  <Input label="Email" type="email" value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+                  <Input label="Phone" type="tel" value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} required />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button type="submit" size="sm" disabled={saving}>
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button type="button" variant="outline" size="sm"
+                  onClick={() => setEditingPlayer(null)}>Cancel</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
       ) : players.length === 0 ? (
@@ -166,14 +288,28 @@ function RosterContent() {
                   </div>
                   <p className="text-xs text-muted truncate">
                     {player.family.parentName} &middot; {formatPhone(player.family.phone)}
+                    {player.family.email && <> &middot; {player.family.email}</>}
                   </p>
+                  {player.notes && (
+                    <p className="text-xs text-muted italic truncate">{player.notes}</p>
+                  )}
                 </div>
-                <button
-                  onClick={() => deletePlayer(player.id)}
-                  className="text-muted hover:text-danger p-1"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => startEdit(player)}
+                    className="text-muted hover:text-primary p-1"
+                    title="Edit player"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => deletePlayer(player.id)}
+                    className="text-muted hover:text-danger p-1"
+                    title="Remove player"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </CardContent>
             </Card>
           ))}

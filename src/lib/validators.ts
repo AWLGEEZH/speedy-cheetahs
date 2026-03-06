@@ -28,10 +28,24 @@ export const createPlayerSchema = z.object({
   familyId: z.string(),
 });
 
+export const updatePlayerSchema = z.object({
+  firstName: z.string().min(1).max(50).optional(),
+  lastName: z.string().min(1).max(50).optional(),
+  jerseyNumber: z.number().int().min(0).max(99).optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+});
+
 export const createFamilySchema = z.object({
   parentName: z.string().min(1).max(100),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().min(10).max(20),
+  smsOptIn: z.boolean().optional(),
+});
+
+export const updateFamilySchema = z.object({
+  parentName: z.string().min(1).max(100).optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().min(10).max(20).optional(),
   smsOptIn: z.boolean().optional(),
 });
 
@@ -122,6 +136,12 @@ export const createCoachSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6).max(100),
   phone: z.string().max(20).optional(),
+});
+
+export const updateCoachSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().max(20).optional().nullable(),
 });
 
 export const changePasswordSchema = z.object({

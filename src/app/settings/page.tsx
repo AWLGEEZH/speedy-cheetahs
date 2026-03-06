@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { UserCog, Plus, Trash2, Key, Shield } from "lucide-react";
+import { UserCog, Plus, Trash2, Key, Shield, Edit2 } from "lucide-react";
 
 interface Coach {
   id: string;
@@ -37,6 +37,11 @@ function SettingsContent() {
   const [newCoachPassword, setNewCoachPassword] = useState("");
   const [newCoachPhone, setNewCoachPhone] = useState("");
   const [addingCoach, setAddingCoach] = useState(false);
+
+  // Edit coach form
+  const [editingCoach, setEditingCoach] = useState<Coach | null>(null);
+  const [editCoachForm, setEditCoachForm] = useState({ name: "", email: "", phone: "" });
+  const [savingCoach, setSavingCoach] = useState(false);
 
   const { addToast } = useToast();
 
@@ -103,6 +108,7 @@ function SettingsContent() {
     if (res.ok) {
       addToast("Coach deleted", "success");
       setCoaches((prev) => prev.filter((c) => c.id !== id));
+      if (editingCoach?.id === id) setEditingCoach(null);
     } else {
       const data = await res.json();
       addToast(data.error || "Failed to delete coach", "error");
@@ -149,6 +155,50 @@ function SettingsContent() {
       addToast("Failed to add coach", "error");
     } finally {
       setAddingCoach(false);
+    }
+  }
+
+  function startEditCoach(coach: Coach) {
+    setEditingCoach(coach);
+    setEditCoachForm({
+      name: coach.name,
+      email: coach.email,
+      phone: coach.phone || "",
+    });
+    setShowAddForm(false);
+  }
+
+  async function saveCoachEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingCoach) return;
+    setSavingCoach(true);
+    try {
+      const res = await fetch(`/api/coaches/${editingCoach.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editCoachForm.name,
+          email: editCoachForm.email,
+          phone: editCoachForm.phone || null,
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCoaches((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+        // Also update currentCoach if editing self
+        if (currentCoach && currentCoach.id === updated.id) {
+          setCurrentCoach(updated);
+        }
+        setEditingCoach(null);
+        addToast("Coach updated", "success");
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to update coach", "error");
+      }
+    } catch {
+      addToast("Failed to update coach", "error");
+    } finally {
+      setSavingCoach(false);
     }
   }
 
@@ -217,11 +267,11 @@ function SettingsContent() {
                   <div>
                     <h3 className="font-semibold text-sm">Manage Coaches</h3>
                     <p className="text-xs text-muted">
-                      Add or remove assistant coaches (max 4 total)
+                      Add, edit, or remove assistant coaches (max 4 total)
                     </p>
                   </div>
                 </div>
-                {!showAddForm && coaches.length < 4 && (
+                {!showAddForm && !editingCoach && coaches.length < 4 && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -242,7 +292,7 @@ function SettingsContent() {
                       <th className="pb-2 font-medium">Email</th>
                       <th className="pb-2 font-medium">Role</th>
                       <th className="pb-2 font-medium">Phone</th>
-                      <th className="pb-2 font-medium w-16"></th>
+                      <th className="pb-2 font-medium w-24"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -257,21 +307,80 @@ function SettingsContent() {
                         </td>
                         <td className="py-2 text-muted">{coach.phone || "---"}</td>
                         <td className="py-2">
-                          {coach.role === "ASSISTANT" && (
+                          <div className="flex items-center gap-1">
                             <Button
                               size="sm"
-                              variant="danger"
-                              onClick={() => deleteCoach(coach.id, coach.name)}
+                              variant="outline"
+                              onClick={() => startEditCoach(coach)}
+                              title="Edit coach"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Edit2 className="h-4 w-4" />
                             </Button>
-                          )}
+                            {coach.role === "ASSISTANT" && (
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                onClick={() => deleteCoach(coach.id, coach.name)}
+                                title="Delete coach"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {/* Edit Coach Form */}
+              {editingCoach && (
+                <div className="border border-border rounded-lg p-4 space-y-3">
+                  <h4 className="font-medium text-sm flex items-center gap-2">
+                    <Edit2 className="h-4 w-4" /> Edit Coach: {editingCoach.name}
+                    <Badge variant={editingCoach.role === "HEAD" ? "info" : "default"}>
+                      {editingCoach.role}
+                    </Badge>
+                  </h4>
+                  <form onSubmit={saveCoachEdit} className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <Input
+                        label="Name"
+                        value={editCoachForm.name}
+                        onChange={(e) => setEditCoachForm({ ...editCoachForm, name: e.target.value })}
+                        required
+                      />
+                      <Input
+                        label="Email"
+                        type="email"
+                        value={editCoachForm.email}
+                        onChange={(e) => setEditCoachForm({ ...editCoachForm, email: e.target.value })}
+                        required
+                      />
+                      <Input
+                        label="Phone (optional)"
+                        type="tel"
+                        value={editCoachForm.phone}
+                        onChange={(e) => setEditCoachForm({ ...editCoachForm, phone: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" size="sm" disabled={savingCoach}>
+                        {savingCoach ? "Saving..." : "Save Changes"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingCoach(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               {/* Add Coach Form */}
               {showAddForm && (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { updatePlayerSchema } from "@/lib/validators";
 
 export async function GET(
   _request: Request,
@@ -29,14 +30,21 @@ export async function PUT(
     await requireAuth();
     const { playerId } = await params;
     const body = await request.json();
+    const parsed = updatePlayerSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+
     const player = await prisma.player.update({
       where: { id: playerId },
       data: {
-        firstName: body.firstName,
-        lastName: body.lastName,
-        jerseyNumber: body.jerseyNumber,
-        notes: body.notes,
+        ...(parsed.data.firstName !== undefined && { firstName: parsed.data.firstName }),
+        ...(parsed.data.lastName !== undefined && { lastName: parsed.data.lastName }),
+        ...(parsed.data.jerseyNumber !== undefined && { jerseyNumber: parsed.data.jerseyNumber }),
+        ...(parsed.data.notes !== undefined && { notes: parsed.data.notes }),
       },
+      include: { family: true },
     });
     return NextResponse.json(player);
   } catch (e) {
