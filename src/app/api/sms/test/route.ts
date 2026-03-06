@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { sendSingleSms } from "@/lib/twilio";
+import twilio from "twilio";
 import { z } from "zod";
 
 const testSmsSchema = z.object({
@@ -18,8 +18,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    await sendSingleSms(parsed.data.to, parsed.data.message);
-    return NextResponse.json({ ok: true, to: parsed.data.to });
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const from = process.env.TWILIO_PHONE_NUMBER;
+
+    if (!accountSid || !authToken) {
+      return NextResponse.json({ error: "Twilio credentials not configured" }, { status: 500 });
+    }
+    if (!from) {
+      return NextResponse.json({ error: "TWILIO_PHONE_NUMBER not configured" }, { status: 500 });
+    }
+
+    const client = twilio(accountSid, authToken);
+    const msg = await client.messages.create({
+      to: parsed.data.to,
+      from,
+      body: `[Speedy Cheetahs] ${parsed.data.message}`,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      to: parsed.data.to,
+      from,
+      sid: msg.sid,
+      status: msg.status,
+    });
   } catch (e) {
     if (e instanceof Error && e.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
