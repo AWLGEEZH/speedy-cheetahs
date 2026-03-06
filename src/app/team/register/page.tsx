@@ -249,11 +249,6 @@ function RegisterContent() {
                           </p>
                           <p className="text-xs text-muted">
                             {player.family.parentName}
-                            {player.family.players.length > 1 && (
-                              <span className="ml-1 text-primary/60">
-                                ({player.family.players.length} siblings)
-                              </span>
-                            )}
                           </p>
                         </div>
                       </div>
@@ -268,16 +263,6 @@ function RegisterContent() {
                   {/* Expanded Family Form */}
                   {isExpanded && isFirstSibling && (
                     <div className="mt-1 border border-border rounded-lg bg-card p-4 space-y-4">
-                      {/* Siblings note */}
-                      {player.family.players.length > 1 && (
-                        <p className="text-xs text-muted bg-blue-50 px-3 py-2 rounded">
-                          This updates contact info for all siblings:{" "}
-                          {player.family.players
-                            .map((p) => p.firstName)
-                            .join(", ")}
-                        </p>
-                      )}
-
                       {/* Primary Contact Form */}
                       <div>
                         <h3 className="text-sm font-semibold mb-3">
