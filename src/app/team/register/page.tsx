@@ -238,16 +238,16 @@ function RegisterContent() {
                         : "border-border hover:border-primary/40 bg-card"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
                           {player.jerseyNumber ?? "—"}
                         </div>
-                        <div>
-                          <p className="font-medium text-sm">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">
                             {player.firstName} {player.lastName}
                           </p>
-                          <p className="text-xs text-muted">
+                          <p className="text-xs text-muted truncate">
                             {player.family.parentName}
                           </p>
                         </div>
@@ -357,9 +357,9 @@ function RegisterContent() {
                         {player.family.contacts.map((contact) => (
                           <div
                             key={contact.id}
-                            className="flex items-start justify-between py-2 border-b border-border last:border-0"
+                            className="flex items-start justify-between gap-2 py-2 border-b border-border last:border-0"
                           >
-                            <div className="text-sm">
+                            <div className="text-sm min-w-0">
                               <p className="font-medium">{contact.name}</p>
                               {contact.relationship && (
                                 <p className="text-xs text-muted">
@@ -409,7 +409,7 @@ function RegisterContent() {
                               }
                               required
                             />
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <Input
                                 label="Phone"
                                 type="tel"

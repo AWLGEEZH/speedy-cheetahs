@@ -212,7 +212,7 @@ function RosterContent() {
               <button onClick={() => setShowAddPlayer(false)}><X className="h-4 w-4" /></button>
             </div>
             <form onSubmit={addPlayer} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input label="First Name" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
                 <Input label="Last Name" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
               </div>
@@ -257,7 +257,7 @@ function RosterContent() {
               {/* Player Info Section */}
               <div>
                 <p className="text-xs font-medium text-muted mb-2 uppercase tracking-wide">Player Info</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input label="First Name" value={editForm.firstName}
                     onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} required />
                   <Input label="Last Name" value={editForm.lastName}
@@ -307,36 +307,35 @@ function RosterContent() {
         <div className="grid gap-3 sm:grid-cols-2">
           {players.map((player) => (
             <Card key={player.id}>
-              <CardContent className="flex items-center gap-3 py-3">
-                <UserCircle className="h-10 w-10 text-muted shrink-0" />
+              <CardContent className="flex items-center gap-2 sm:gap-3 py-3">
+                <UserCircle className="h-8 w-8 sm:h-10 sm:w-10 text-muted shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <span className="font-medium text-sm truncate">
                       {player.firstName} {player.lastName}
                     </span>
                     {player.jerseyNumber != null && (
-                      <Badge>#{player.jerseyNumber}</Badge>
+                      <Badge className="shrink-0">#{player.jerseyNumber}</Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted truncate">
                     {player.family.parentName} &middot; {formatPhone(player.family.phone)}
-                    {player.family.email && <> &middot; {player.family.email}</>}
                   </p>
                   {player.notes && (
                     <p className="text-xs text-muted italic truncate">{player.notes}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 shrink-0">
                   <button
                     onClick={() => startEdit(player)}
-                    className="text-muted hover:text-primary p-1"
+                    className="text-muted hover:text-primary p-1.5 sm:p-1"
                     title="Edit player"
                   >
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => deletePlayer(player.id)}
-                    className="text-muted hover:text-danger p-1"
+                    className="text-muted hover:text-danger p-1.5 sm:p-1"
                     title="Remove player"
                   >
                     <X className="h-4 w-4" />

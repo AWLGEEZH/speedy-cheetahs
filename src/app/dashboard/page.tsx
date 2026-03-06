@@ -50,13 +50,13 @@ export default function DashboardPage() {
       ) : (
         <div className="space-y-6">
           {/* Quick stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             <Link href="/roster">
               <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="flex items-center gap-3 py-4">
-                  <Users className="h-8 w-8 text-primary" />
-                  <div>
-                    <div className="text-2xl font-bold">{stats?.players ?? 0}</div>
+                <CardContent className="flex items-center gap-2 sm:gap-3 p-3 sm:py-4">
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <div className="text-xl sm:text-2xl font-bold">{stats?.players ?? 0}</div>
                     <div className="text-xs text-muted">Players</div>
                   </div>
                 </CardContent>
@@ -64,10 +64,10 @@ export default function DashboardPage() {
             </Link>
             <Link href="/schedule">
               <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="flex items-center gap-3 py-4">
-                  <Calendar className="h-8 w-8 text-blue-500" />
-                  <div>
-                    <div className="text-2xl font-bold">{stats?.upcomingEvents.length ?? 0}</div>
+                <CardContent className="flex items-center gap-2 sm:gap-3 p-3 sm:py-4">
+                  <Calendar className="h-6 w-6 sm:h-8 sm:w-8 shrink-0 text-blue-500" />
+                  <div className="min-w-0">
+                    <div className="text-xl sm:text-2xl font-bold">{stats?.upcomingEvents.length ?? 0}</div>
                     <div className="text-xs text-muted">Upcoming</div>
                   </div>
                 </CardContent>
@@ -75,10 +75,10 @@ export default function DashboardPage() {
             </Link>
             <Link href="/updates">
               <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="flex items-center gap-3 py-4">
-                  <Megaphone className="h-8 w-8 text-green-500" />
-                  <div>
-                    <div className="text-2xl font-bold">{stats?.recentUpdates.length ?? 0}</div>
+                <CardContent className="flex items-center gap-2 sm:gap-3 p-3 sm:py-4">
+                  <Megaphone className="h-6 w-6 sm:h-8 sm:w-8 shrink-0 text-green-500" />
+                  <div className="min-w-0">
+                    <div className="text-xl sm:text-2xl font-bold">{stats?.recentUpdates.length ?? 0}</div>
                     <div className="text-xs text-muted">Updates</div>
                   </div>
                 </CardContent>
@@ -86,10 +86,10 @@ export default function DashboardPage() {
             </Link>
             <Link href="/gameday">
               <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="flex items-center gap-3 py-4">
-                  <Gamepad2 className="h-8 w-8 text-primary" />
-                  <div>
-                    <div className="text-2xl font-bold">Go</div>
+                <CardContent className="flex items-center gap-2 sm:gap-3 p-3 sm:py-4">
+                  <Gamepad2 className="h-6 w-6 sm:h-8 sm:w-8 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <div className="text-xl sm:text-2xl font-bold">Go</div>
                     <div className="text-xs text-muted">Game Day</div>
                   </div>
                 </CardContent>
@@ -107,14 +107,14 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted py-2">No upcoming events</p>
               ) : (
                 stats?.upcomingEvents.map((event) => (
-                  <div key={event.id} className="flex items-center justify-between py-2.5">
-                    <div>
-                      <span className="font-medium text-sm">{event.title}</span>
-                      <p className="text-xs text-muted">
+                  <div key={event.id} className="flex items-start sm:items-center justify-between gap-2 py-2.5">
+                    <div className="min-w-0">
+                      <span className="font-medium text-sm block truncate">{event.title}</span>
+                      <p className="text-xs text-muted truncate">
                         {formatDateTime(event.date)} &middot; {event.locationName}
                       </p>
                     </div>
-                    <Badge variant={event.type === "GAME" ? "warning" : "info"}>
+                    <Badge variant={event.type === "GAME" ? "warning" : "info"} className="shrink-0">
                       {event.type}
                     </Badge>
                   </div>

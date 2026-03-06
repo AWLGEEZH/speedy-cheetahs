@@ -136,13 +136,13 @@ function VolunteerContent() {
                     const isFull = role.signups.length >= role.slotsNeeded;
                     return (
                       <div key={role.id} className="px-4 py-3">
-                        <div className="flex items-center justify-between">
-                          <div>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="min-w-0">
                             <span className="text-sm font-medium">{role.name}</span>
                             {role.description && (
                               <p className="text-xs text-muted">{role.description}</p>
                             )}
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
                               <Badge variant={isFull ? "success" : "warning"}>
                                 {role.signups.length}/{role.slotsNeeded} filled
                               </Badge>
@@ -154,15 +154,17 @@ function VolunteerContent() {
                             </div>
                           </div>
                           {!isFull && (
-                            signingUp === role.id ? (
-                              <Button size="sm" onClick={() => handleSignup(role.id)}>
-                                <Check className="h-4 w-4 mr-1" /> Confirm
-                              </Button>
-                            ) : (
-                              <Button size="sm" variant="outline" onClick={() => setSigningUp(role.id)}>
-                                Sign Up
-                              </Button>
-                            )
+                            <div className="shrink-0">
+                              {signingUp === role.id ? (
+                                <Button size="sm" onClick={() => handleSignup(role.id)}>
+                                  <Check className="h-4 w-4 mr-1" /> Confirm
+                                </Button>
+                              ) : (
+                                <Button size="sm" variant="outline" onClick={() => setSigningUp(role.id)}>
+                                  Sign Up
+                                </Button>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
