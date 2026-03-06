@@ -149,6 +149,20 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(6).max(100),
 });
 
+export const publicFamilyUpdateSchema = z.object({
+  parentName: z.string().min(1).max(100).optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().min(10).max(20).optional(),
+  smsOptIn: z.boolean().optional(),
+});
+
+export const createContactSchema = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().max(20).optional().or(z.literal("")),
+  relationship: z.string().max(50).optional().or(z.literal("")),
+});
+
 export const createKBTextSchema = z.object({
   title: z.string().min(1).max(200),
   type: z.literal("TEXT"),

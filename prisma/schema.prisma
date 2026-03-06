@@ -52,8 +52,23 @@ model Family {
   updatedAt  DateTime @updatedAt
 
   players          Player[]
+  contacts         Contact[]
   volunteerSignups VolunteerSignup[]
   attendanceRsvps  AttendanceRsvp[]
+}
+
+model Contact {
+  id           String   @id @default(cuid())
+  name         String
+  email        String?
+  phone        String?
+  relationship String?
+  familyId     String
+  createdAt    DateTime @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
 }
 
 model Player {

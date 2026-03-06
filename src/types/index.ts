@@ -130,6 +130,31 @@ export interface CoachInfo {
   createdAt: string;
 }
 
+export interface Contact {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  relationship: string | null;
+  familyId: string;
+  createdAt: string;
+}
+
+export interface FamilyWithPlayersAndContacts {
+  id: string;
+  parentName: string;
+  email: string | null;
+  phone: string;
+  smsOptIn: boolean;
+  players: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    jerseyNumber: number | null;
+  }[];
+  contacts: Contact[];
+}
+
 export type KBType = "PDF" | "URL" | "TEXT";
 
 export interface KnowledgeBaseEntry {

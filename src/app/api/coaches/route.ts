@@ -39,9 +39,9 @@ export async function POST(request: Request) {
     }
 
     const count = await prisma.coach.count();
-    if (count >= 4) {
+    if (count >= 10) {
       return NextResponse.json(
-        { error: "Maximum of 4 coaches allowed" },
+        { error: "Maximum of 10 coaches allowed" },
         { status: 400 }
       );
     }

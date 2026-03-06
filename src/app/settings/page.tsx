@@ -117,8 +117,8 @@ function SettingsContent() {
 
   async function handleAddCoach(e: React.FormEvent) {
     e.preventDefault();
-    if (coaches.length >= 4) {
-      addToast("Maximum of 4 coaches reached", "error");
+    if (coaches.length >= 10) {
+      addToast("Maximum of 10 coaches reached", "error");
       return;
     }
     if (newCoachPassword.length < 6) {
@@ -267,11 +267,11 @@ function SettingsContent() {
                   <div>
                     <h3 className="font-semibold text-sm">Manage Coaches</h3>
                     <p className="text-xs text-muted">
-                      Add, edit, or remove assistant coaches (max 4 total)
+                      Add, edit, or remove assistant coaches (max 10 total)
                     </p>
                   </div>
                 </div>
-                {!showAddForm && !editingCoach && coaches.length < 4 && (
+                {!showAddForm && !editingCoach && coaches.length < 10 && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -439,9 +439,9 @@ function SettingsContent() {
                       </Button>
                     </div>
                   </form>
-                  {coaches.length >= 4 && (
+                  {coaches.length >= 10 && (
                     <p className="text-sm text-danger">
-                      Maximum of 4 coaches reached. Remove a coach before adding another.
+                      Maximum of 10 coaches reached. Remove a coach before adding another.
                     </p>
                   )}
                 </div>
@@ -472,6 +472,12 @@ function SettingsContent() {
               <label className="text-xs text-muted block mb-1">Updates Feed</label>
               <code className="text-xs bg-gray-100 px-2 py-1 rounded block break-all">
                 {baseUrl}/team/updates
+              </code>
+            </div>
+            <div>
+              <label className="text-xs text-muted block mb-1">Parent Registration</label>
+              <code className="text-xs bg-gray-100 px-2 py-1 rounded block break-all">
+                {baseUrl}/team/register
               </code>
             </div>
           </CardContent>
