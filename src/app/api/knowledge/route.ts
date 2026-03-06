@@ -60,7 +60,23 @@ export async function POST(request: Request) {
 
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-      const content = await extractTextFromPdf(buffer);
+      let content: string;
+      try {
+        content = await extractTextFromPdf(buffer);
+      } catch (pdfError) {
+        const msg = pdfError instanceof Error ? pdfError.message : "Unknown error";
+        console.error("PDF parse error:", pdfError);
+        return NextResponse.json(
+          { error: `Failed to parse PDF: ${msg}` },
+          { status: 422 }
+        );
+      }
+      if (!content || content.trim().length === 0) {
+        return NextResponse.json(
+          { error: "Could not extract text from this PDF. It may be a scanned image — only text-based PDFs are supported." },
+          { status: 422 }
+        );
+      }
 
       const entry = await prisma.knowledgeBase.create({
         data: {
