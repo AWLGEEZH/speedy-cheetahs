@@ -26,8 +26,11 @@ export async function extractTextFromUrl(url: string): Promise<string> {
 }
 
 export async function extractTextFromPdf(buffer: Buffer): Promise<string> {
+  // pdf-parse v2 uses a class-based API
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
-  const data = await pdfParse(buffer);
-  return data.text;
+  const { PDFParse } = require("pdf-parse");
+  const parser = new PDFParse({ data: new Uint8Array(buffer) });
+  const result = await parser.getText();
+  await parser.destroy();
+  return result.text;
 }
