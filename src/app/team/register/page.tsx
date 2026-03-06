@@ -29,6 +29,7 @@ interface Family {
   email: string | null;
   phone: string;
   smsOptIn: boolean;
+  emailOptIn: boolean;
   players: Player[];
   contacts: Contact[];
 }
@@ -45,6 +46,7 @@ function RegisterContent() {
     email: "",
     phone: "",
     smsOptIn: true,
+    emailOptIn: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -86,6 +88,7 @@ function RegisterContent() {
       email: family.email || "",
       phone: family.phone,
       smsOptIn: family.smsOptIn,
+      emailOptIn: family.emailOptIn,
     });
     setShowAddContact(false);
     setNewContact({ name: "", email: "", phone: "", relationship: "" });
@@ -303,20 +306,37 @@ function RegisterContent() {
                             }
                             placeholder="(555) 123-4567"
                           />
-                          <label className="flex items-center gap-2 text-sm cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={editForm.smsOptIn}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  smsOptIn: e.target.checked,
-                                })
-                              }
-                              className="rounded border-border"
-                            />
-                            Receive SMS notifications from coaches
-                          </label>
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-muted">Notification Preferences</p>
+                            <label className="flex items-center gap-2 text-sm cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={editForm.smsOptIn}
+                                onChange={(e) =>
+                                  setEditForm({
+                                    ...editForm,
+                                    smsOptIn: e.target.checked,
+                                  })
+                                }
+                                className="rounded border-border"
+                              />
+                              Receive SMS notifications
+                            </label>
+                            <label className="flex items-center gap-2 text-sm cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={editForm.emailOptIn}
+                                onChange={(e) =>
+                                  setEditForm({
+                                    ...editForm,
+                                    emailOptIn: e.target.checked,
+                                  })
+                                }
+                                className="rounded border-border"
+                              />
+                              Receive email notifications
+                            </label>
+                          </div>
                           <Button
                             size="sm"
                             onClick={() => handleSave(player.family.id)}

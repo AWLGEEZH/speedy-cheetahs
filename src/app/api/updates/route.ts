@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { postUpdateSchema } from "@/lib/validators";
 import { sendBulkSms } from "@/lib/twilio";
+import { sendBulkEmail } from "@/lib/email";
 
 export async function GET() {
   try {
@@ -29,10 +30,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { sendSms, ...updateData } = parsed.data;
+    const { sendSms, sendEmail, ...updateData } = parsed.data;
     let smsSent = false;
     let smsCount = 0;
+    let emailSent = false;
+    let emailCount = 0;
 
+    // Send SMS to opted-in families
     if (sendSms) {
       try {
         const families = await prisma.family.findMany({
@@ -53,6 +57,30 @@ export async function POST(request: Request) {
       }
     }
 
+    // Send email to opted-in families
+    if (sendEmail) {
+      try {
+        const families = await prisma.family.findMany({
+          where: { emailOptIn: true, email: { not: null }, NOT: { email: "" } },
+          select: { email: true },
+        });
+        const emails = families
+          .map((f) => f.email)
+          .filter((e): e is string => !!e);
+        if (emails.length > 0) {
+          const result = await sendBulkEmail(
+            emails,
+            updateData.title,
+            updateData.message
+          );
+          emailSent = true;
+          emailCount = result.sent;
+        }
+      } catch {
+        // Email failed but still create the update
+      }
+    }
+
     const update = await prisma.update.create({
       data: {
         ...updateData,
@@ -60,6 +88,8 @@ export async function POST(request: Request) {
         coachId: session.coachId,
         smsSent,
         smsCount,
+        emailSent,
+        emailCount,
       },
       include: {
         coach: { select: { name: true } },

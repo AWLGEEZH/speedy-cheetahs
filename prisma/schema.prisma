@@ -43,13 +43,14 @@ model Team {
 // ─── PLAYERS & FAMILIES ────────────────────────────────
 
 model Family {
-  id         String  @id @default(cuid())
-  parentName String
-  email      String?
-  phone      String
-  smsOptIn   Boolean @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String  @id @default(cuid())
+  parentName   String
+  email        String?
+  phone        String
+  smsOptIn     Boolean @default(true)
+  emailOptIn   Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   players          Player[]
   contacts         Contact[]
@@ -120,14 +121,16 @@ enum EventType {
 // ─── UPDATES & NOTIFICATIONS ───────────────────────────
 
 model Update {
-  id        String   @id @default(cuid())
-  title     String
-  message   String   @db.Text
-  smsSent   Boolean  @default(false)
-  smsCount  Int      @default(0)
-  eventId   String?
-  coachId   String
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  title      String
+  message    String   @db.Text
+  smsSent    Boolean  @default(false)
+  smsCount   Int      @default(0)
+  emailSent  Boolean  @default(false)
+  emailCount Int      @default(0)
+  eventId    String?
+  coachId    String
+  createdAt  DateTime @default(now())
 
   event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
   coach Coach  @relation(fields: [coachId], references: [id], onDelete: Cascade)

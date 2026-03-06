@@ -41,6 +41,7 @@ export const createFamilySchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().min(10).max(20),
   smsOptIn: z.boolean().optional(),
+  emailOptIn: z.boolean().optional(),
 });
 
 export const updateFamilySchema = z.object({
@@ -48,6 +49,7 @@ export const updateFamilySchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().min(10).max(20).optional(),
   smsOptIn: z.boolean().optional(),
+  emailOptIn: z.boolean().optional(),
 });
 
 export const familyRegistrationSchema = z.object({
@@ -75,6 +77,7 @@ export const postUpdateSchema = z.object({
   message: z.string().min(1).max(2000),
   eventId: z.string().optional(),
   sendSms: z.boolean().default(false),
+  sendEmail: z.boolean().default(false),
 });
 
 export const attendanceRsvpSchema = z.object({
@@ -155,6 +158,7 @@ export const publicFamilyUpdateSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().min(10).max(20).optional(),
   smsOptIn: z.boolean().optional(),
+  emailOptIn: z.boolean().optional(),
 });
 
 export const createContactSchema = z.object({

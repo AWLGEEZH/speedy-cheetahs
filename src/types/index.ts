@@ -66,6 +66,8 @@ export interface UpdateWithCoach {
   message: string;
   smsSent: boolean;
   smsCount: number;
+  emailSent: boolean;
+  emailCount: number;
   eventId: string | null;
   createdAt: string;
   coach: {
