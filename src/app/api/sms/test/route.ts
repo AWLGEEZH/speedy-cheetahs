@@ -20,14 +20,18 @@ export async function POST(request: Request) {
 
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const from = process.env.TWILIO_PHONE_NUMBER;
+    const rawFrom = process.env.TWILIO_PHONE_NUMBER?.trim();
 
     if (!accountSid || !authToken) {
       return NextResponse.json({ error: "Twilio credentials not configured" }, { status: 500 });
     }
-    if (!from) {
+    if (!rawFrom) {
       return NextResponse.json({ error: "TWILIO_PHONE_NUMBER not configured" }, { status: 500 });
     }
+
+    // Normalize to E.164 format: strip everything except digits, then add +
+    const digits = rawFrom.replace(/[^\d]/g, "");
+    const from = digits.startsWith("1") ? `+${digits}` : `+1${digits}`;
 
     const client = twilio(accountSid, authToken);
     const msg = await client.messages.create({
