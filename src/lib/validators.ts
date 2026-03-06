@@ -33,6 +33,7 @@ export const updatePlayerSchema = z.object({
   lastName: z.string().min(1).max(50).optional(),
   jerseyNumber: z.number().int().min(0).max(99).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
+  familyId: z.string().optional(),
 });
 
 export const createFamilySchema = z.object({

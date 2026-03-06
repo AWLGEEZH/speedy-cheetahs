@@ -110,18 +110,48 @@ function RosterContent() {
     if (!editingPlayer) return;
     setSaving(true);
     try {
-      const [playerRes, familyRes] = await Promise.all([
-        fetch(`/api/players/${editingPlayer.id}`, {
-          method: "PUT",
+      // Check if this family is shared by other players
+      const othersOnFamily = players.filter(
+        (p) => p.familyId === editingPlayer.familyId && p.id !== editingPlayer.id
+      );
+
+      // Update player fields
+      const playerRes = await fetch(`/api/players/${editingPlayer.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: editForm.firstName,
+          lastName: editForm.lastName,
+          jerseyNumber: editForm.jerseyNumber ? parseInt(editForm.jerseyNumber) : null,
+          notes: editForm.notes || null,
+        }),
+      });
+
+      let familyOk = false;
+      if (othersOnFamily.length > 0) {
+        // Family is shared — create a NEW family for this player
+        const createRes = await fetch("/api/families", {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            firstName: editForm.firstName,
-            lastName: editForm.lastName,
-            jerseyNumber: editForm.jerseyNumber ? parseInt(editForm.jerseyNumber) : null,
-            notes: editForm.notes || null,
+            parentName: editForm.parentName,
+            email: editForm.email || "",
+            phone: editForm.phone,
           }),
-        }),
-        fetch(`/api/families/${editingPlayer.familyId}`, {
+        });
+        if (createRes.ok) {
+          const newFamily = await createRes.json();
+          // Reassign this player to the new family
+          const reassignRes = await fetch(`/api/players/${editingPlayer.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ familyId: newFamily.id }),
+          });
+          familyOk = reassignRes.ok;
+        }
+      } else {
+        // Only player in this family — safe to update directly
+        const familyRes = await fetch(`/api/families/${editingPlayer.familyId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -129,9 +159,11 @@ function RosterContent() {
             email: editForm.email || "",
             phone: editForm.phone,
           }),
-        }),
-      ]);
-      if (playerRes.ok && familyRes.ok) {
+        });
+        familyOk = familyRes.ok;
+      }
+
+      if (playerRes.ok && familyOk) {
         await load();
         setEditingPlayer(null);
         addToast("Player updated", "success");

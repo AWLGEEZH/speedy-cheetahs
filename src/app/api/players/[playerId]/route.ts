@@ -43,6 +43,7 @@ export async function PUT(
         ...(parsed.data.lastName !== undefined && { lastName: parsed.data.lastName }),
         ...(parsed.data.jerseyNumber !== undefined && { jerseyNumber: parsed.data.jerseyNumber }),
         ...(parsed.data.notes !== undefined && { notes: parsed.data.notes }),
+        ...(parsed.data.familyId !== undefined && { familyId: parsed.data.familyId }),
       },
       include: { family: true },
     });
