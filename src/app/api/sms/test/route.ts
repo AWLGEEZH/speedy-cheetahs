@@ -1,0 +1,30 @@
+import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { sendSingleSms } from "@/lib/twilio";
+import { z } from "zod";
+
+const testSmsSchema = z.object({
+  to: z.string().min(10).max(20),
+  message: z.string().min(1).max(500).default("This is a test message from Speedy Cheetahs!"),
+});
+
+export async function POST(request: Request) {
+  try {
+    await requireAuth();
+    const body = await request.json();
+    const parsed = testSmsSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+
+    await sendSingleSms(parsed.data.to, parsed.data.message);
+    return NextResponse.json({ ok: true, to: parsed.data.to });
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const msg = e instanceof Error ? e.message : "Failed to send test SMS";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
