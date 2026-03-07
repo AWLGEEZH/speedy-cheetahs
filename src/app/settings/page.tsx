@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { UserCog, Plus, Trash2, Key, Shield, Edit2 } from "lucide-react";
+import { UserCog, Plus, Trash2, Key, Shield, Edit2, RotateCcw } from "lucide-react";
 
 interface Coach {
   id: string;
@@ -41,6 +41,12 @@ function SettingsContent() {
   const [editingCoach, setEditingCoach] = useState<Coach | null>(null);
   const [editCoachForm, setEditCoachForm] = useState({ name: "", email: "", phone: "" });
   const [savingCoach, setSavingCoach] = useState(false);
+
+  // Reset password form
+  const [resetCoach, setResetCoach] = useState<Coach | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirm, setResetConfirm] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   const { addToast } = useToast();
 
@@ -201,6 +207,48 @@ function SettingsContent() {
     }
   }
 
+  function startResetPassword(coach: Coach) {
+    setResetCoach(coach);
+    setResetPassword("");
+    setResetConfirm("");
+    setEditingCoach(null);
+    setShowAddForm(false);
+  }
+
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resetCoach) return;
+    if (resetPassword.length < 6) {
+      addToast("Password must be at least 6 characters", "error");
+      return;
+    }
+    if (resetPassword !== resetConfirm) {
+      addToast("Passwords do not match", "error");
+      return;
+    }
+    setResettingPassword(true);
+    try {
+      const res = await fetch(`/api/coaches/${resetCoach.id}/reset-password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword: resetPassword }),
+      });
+      if (res.ok) {
+        addToast(`Password reset for ${resetCoach.name}`, "success");
+        setResetCoach(null);
+        setResetPassword("");
+        setResetConfirm("");
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to reset password", "error");
+      }
+    } catch {
+      addToast("Failed to reset password", "error");
+    } finally {
+      setResettingPassword(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-6">
@@ -316,14 +364,24 @@ function SettingsContent() {
                               <Edit2 className="h-4 w-4" />
                             </Button>
                             {coach.role === "ASSISTANT" && (
-                              <Button
-                                size="sm"
-                                variant="danger"
-                                onClick={() => deleteCoach(coach.id, coach.name)}
-                                title="Delete coach"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => startResetPassword(coach)}
+                                  title="Reset password"
+                                >
+                                  <RotateCcw className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="danger"
+                                  onClick={() => deleteCoach(coach.id, coach.name)}
+                                  title="Delete coach"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
                             )}
                           </div>
                         </td>
@@ -373,6 +431,47 @@ function SettingsContent() {
                         size="sm"
                         variant="outline"
                         onClick={() => setEditingCoach(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Reset Password Form */}
+              {resetCoach && (
+                <div className="border border-border rounded-lg p-4 space-y-3">
+                  <h4 className="font-medium text-sm flex items-center gap-2">
+                    <RotateCcw className="h-4 w-4" /> Reset Password: {resetCoach.name}
+                  </h4>
+                  <form onSubmit={handleResetPassword} className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Input
+                        label="New Password"
+                        type="password"
+                        value={resetPassword}
+                        onChange={(e) => setResetPassword(e.target.value)}
+                        placeholder="Minimum 6 characters"
+                        required
+                      />
+                      <Input
+                        label="Confirm Password"
+                        type="password"
+                        value={resetConfirm}
+                        onChange={(e) => setResetConfirm(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" size="sm" disabled={resettingPassword}>
+                        {resettingPassword ? "Resetting..." : "Reset Password"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setResetCoach(null)}
                       >
                         Cancel
                       </Button>

@@ -74,3 +74,20 @@ export async function clearSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete("session");
 }
+
+export async function createResetToken(coachId: string): Promise<string> {
+  return new SignJWT({ coachId, purpose: "password-reset" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("15m")
+    .sign(JWT_SECRET);
+}
+
+export async function verifyResetToken(token: string): Promise<{ coachId: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    if (payload.purpose !== "password-reset") return null;
+    return { coachId: payload.coachId as string };
+  } catch {
+    return null;
+  }
+}

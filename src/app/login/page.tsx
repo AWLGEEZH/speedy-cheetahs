@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +83,13 @@ export default function LoginPage() {
           >
             {loading ? "Signing in..." : "Sign In"}
           </Button>
+
+          <Link
+            href="/forgot-password"
+            className="block text-center text-sm text-muted hover:text-primary"
+          >
+            Forgot your password?
+          </Link>
         </form>
       </div>
     </div>

@@ -153,6 +153,10 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(6).max(100),
 });
 
+export const resetPasswordSchema = z.object({
+  newPassword: z.string().min(6).max(100),
+});
+
 export const publicFamilyUpdateSchema = z.object({
   parentName: z.string().min(1).max(100).optional(),
   email: z.string().email().optional().or(z.literal("")),
