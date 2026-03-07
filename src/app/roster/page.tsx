@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CoachLayout } from "@/components/layout/coach-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -110,12 +109,10 @@ function RosterContent() {
     if (!editingPlayer) return;
     setSaving(true);
     try {
-      // Check if this family is shared by other players
       const othersOnFamily = players.filter(
         (p) => p.familyId === editingPlayer.familyId && p.id !== editingPlayer.id
       );
 
-      // Update player fields
       const playerRes = await fetch(`/api/players/${editingPlayer.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -129,7 +126,6 @@ function RosterContent() {
 
       let familyOk = false;
       if (othersOnFamily.length > 0) {
-        // Family is shared — create a NEW family for this player
         const createRes = await fetch("/api/families", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -141,7 +137,6 @@ function RosterContent() {
         });
         if (createRes.ok) {
           const newFamily = await createRes.json();
-          // Reassign this player to the new family
           const reassignRes = await fetch(`/api/players/${editingPlayer.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -150,7 +145,6 @@ function RosterContent() {
           familyOk = reassignRes.ok;
         }
       } else {
-        // Only player in this family — safe to update directly
         const familyRes = await fetch(`/api/families/${editingPlayer.familyId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -178,14 +172,13 @@ function RosterContent() {
   }
 
   return (
-    <CoachLayout>
+    <div className="max-w-5xl mx-auto px-4 py-6">
       <PageHeader
         title="Roster"
         subtitle={`${players.length} players`}
         action={{ label: "+ Add Player", onClick: () => { setShowAddPlayer(true); setEditingPlayer(null); } }}
       />
 
-      {/* Add family modal */}
       {showAddFamily && (
         <Card className="mb-4 border-primary">
           <CardContent className="py-4">
@@ -203,7 +196,6 @@ function RosterContent() {
         </Card>
       )}
 
-      {/* Add player modal */}
       {showAddPlayer && !editingPlayer && (
         <Card className="mb-4 border-primary">
           <CardContent className="py-4">
@@ -242,7 +234,6 @@ function RosterContent() {
         </Card>
       )}
 
-      {/* Edit player modal */}
       {editingPlayer && (
         <Card className="mb-4 border-primary">
           <CardContent className="py-4">
@@ -254,7 +245,6 @@ function RosterContent() {
               <button onClick={() => setEditingPlayer(null)}><X className="h-4 w-4" /></button>
             </div>
             <form onSubmit={saveEdit} className="space-y-4">
-              {/* Player Info Section */}
               <div>
                 <p className="text-xs font-medium text-muted mb-2 uppercase tracking-wide">Player Info</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -273,8 +263,6 @@ function RosterContent() {
                     placeholder="Allergies, medical info, etc." />
                 </div>
               </div>
-
-              {/* Family/Parent Info Section */}
               <div>
                 <p className="text-xs font-medium text-muted mb-2 uppercase tracking-wide">Parent / Guardian Info</p>
                 <div className="space-y-3">
@@ -286,7 +274,6 @@ function RosterContent() {
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} required />
                 </div>
               </div>
-
               <div className="flex gap-2">
                 <Button type="submit" size="sm" disabled={saving}>
                   {saving ? "Saving..." : "Save Changes"}
@@ -346,7 +333,7 @@ function RosterContent() {
           ))}
         </div>
       )}
-    </CoachLayout>
+    </div>
   );
 }
 

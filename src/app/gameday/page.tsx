@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CoachLayout } from "@/components/layout/coach-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +36,7 @@ export default function GameDaySelectPage() {
   }, []);
 
   return (
-    <CoachLayout>
+    <div className="max-w-3xl mx-auto px-4 py-6">
       <PageHeader title="Game Day" subtitle="Select a game to manage" />
 
       {loading ? (
@@ -80,6 +79,6 @@ export default function GameDaySelectPage() {
           ))}
         </div>
       )}
-    </CoachLayout>
+    </div>
   );
 }

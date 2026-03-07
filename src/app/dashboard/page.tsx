@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CoachLayout } from "@/components/layout/coach-layout";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
@@ -40,7 +39,7 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <CoachLayout>
+    <div className="max-w-5xl mx-auto px-4 py-6">
       <h1 className="text-xl lg:text-2xl font-bold text-secondary mb-6">
         Dashboard
       </h1>
@@ -124,6 +123,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       )}
-    </CoachLayout>
+    </div>
   );
 }

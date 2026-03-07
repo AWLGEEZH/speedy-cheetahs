@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,7 +32,8 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      await refresh();
+      router.push("/");
     } catch {
       setError("Something went wrong");
     } finally {

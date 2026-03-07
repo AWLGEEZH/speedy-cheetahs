@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CoachLayout } from "@/components/layout/coach-layout";
-import { PageHeader } from "@/components/layout/page-header";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +14,7 @@ import type { UpdateWithCoach } from "@/types";
 import { X, MessageSquare, Send, Mail } from "lucide-react";
 
 function UpdatesContent() {
+  const { isCoach } = useAuth();
   const [updates, setUpdates] = useState<UpdateWithCoach[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -60,14 +60,22 @@ function UpdatesContent() {
   }
 
   return (
-    <CoachLayout>
-      <PageHeader
-        title="Updates"
-        subtitle="Post announcements to families"
-        action={{ label: "+ Post Update", onClick: () => setShowForm(true) }}
-      />
+    <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-xl font-bold text-secondary">Updates</h1>
+          <p className="text-sm text-muted">
+            {isCoach ? "Post announcements to families" : "Team announcements"}
+          </p>
+        </div>
+        {isCoach && (
+          <Button size="sm" onClick={() => setShowForm(true)}>
+            + Post Update
+          </Button>
+        )}
+      </div>
 
-      {showForm && (
+      {isCoach && showForm && (
         <Card className="mb-4 border-primary">
           <CardContent className="py-4">
             <div className="flex justify-between mb-3">
@@ -111,32 +119,30 @@ function UpdatesContent() {
       {loading ? (
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
       ) : updates.length === 0 ? (
-        <p className="text-muted text-sm">No updates yet.</p>
+        <p className="text-muted text-sm text-center py-8">No updates yet.</p>
       ) : (
         <div className="space-y-3">
           {updates.map((update) => (
-            <Card key={update.id}>
-              <CardContent className="py-3">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <MessageSquare className="h-4 w-4 text-muted" />
-                  <span className="font-medium text-sm">{update.title}</span>
-                  {update.smsSent && (
-                    <Badge variant="success">SMS ({update.smsCount})</Badge>
-                  )}
-                  {update.emailSent && (
-                    <Badge variant="info">Email ({update.emailCount})</Badge>
-                  )}
-                </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{update.message}</p>
-                <p className="text-xs text-muted mt-2">
-                  {update.coach.name} &middot; {formatDateTime(update.createdAt)}
-                </p>
-              </CardContent>
-            </Card>
+            <div key={update.id} className="bg-surface border border-border rounded-lg p-4">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <MessageSquare className="h-4 w-4 text-muted" />
+                <span className="font-medium text-sm">{update.title}</span>
+                {isCoach && update.smsSent && (
+                  <Badge variant="success">SMS ({update.smsCount})</Badge>
+                )}
+                {isCoach && update.emailSent && (
+                  <Badge variant="info">Email ({update.emailCount})</Badge>
+                )}
+              </div>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{update.message}</p>
+              <p className="text-xs text-muted mt-2">
+                {update.coach.name} &middot; {formatDateTime(update.createdAt)}
+              </p>
+            </div>
           ))}
         </div>
       )}
-    </CoachLayout>
+    </div>
   );
 }
 

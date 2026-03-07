@@ -44,13 +44,13 @@ export default async function HomePage() {
           <p className="text-white/80 text-lg">Farm-1 Coach Pitch Baseball</p>
           <div className="mt-6 flex gap-3 justify-center flex-wrap">
             <Link
-              href="/team/schedule"
+              href="/schedule"
               className="px-5 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
             >
               View Schedule
             </Link>
             <Link
-              href="/team/volunteer"
+              href="/volunteer"
               className="px-5 py-2.5 bg-white/10 text-white rounded-lg font-medium hover:bg-white/20 transition-colors"
             >
               Volunteer Sign-Up

@@ -10,9 +10,6 @@ const JWT_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 const PROTECTED_PATHS = [
   "/dashboard",
   "/roster",
-  "/schedule",
-  "/volunteer",
-  "/updates",
   "/rules",
   "/coaching",
   "/gameday",
@@ -48,9 +45,6 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/roster/:path*",
-    "/schedule/:path*",
-    "/volunteer/:path*",
-    "/updates/:path*",
     "/rules/:path*",
     "/coaching/:path*",
     "/gameday/:path*",

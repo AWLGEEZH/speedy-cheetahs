@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CoachLayout } from "@/components/layout/coach-layout";
-import { PageHeader } from "@/components/layout/page-header";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +28,7 @@ interface Event {
 }
 
 function ScheduleContent() {
+  const { isCoach } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -109,14 +109,22 @@ function ScheduleContent() {
   }
 
   return (
-    <CoachLayout>
-      <PageHeader
-        title="Schedule"
-        subtitle="Manage practices and games"
-        action={{ label: "+ Add Event", onClick: () => setShowForm(true) }}
-      />
+    <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-xl font-bold text-secondary">Schedule</h1>
+          <p className="text-sm text-muted">
+            {isCoach ? "Manage practices and games" : "Upcoming practices and games"}
+          </p>
+        </div>
+        {isCoach && (
+          <Button size="sm" onClick={() => setShowForm(true)}>
+            + Add Event
+          </Button>
+        )}
+      </div>
 
-      {showForm && (
+      {isCoach && showForm && (
         <Card className="mb-4 border-primary">
           <CardContent className="py-4">
             <div className="flex justify-between mb-3">
@@ -134,7 +142,7 @@ function ScheduleContent() {
               {form.type === "GAME" && (
                 <Input label="Opponent" value={form.opponent} onChange={(e) => setForm({ ...form, opponent: e.target.value })} placeholder="Team name" />
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input label="Start" type="datetime-local" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
                 <Input label="End" type="datetime-local" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} />
               </div>
@@ -153,39 +161,57 @@ function ScheduleContent() {
       {loading ? (
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
       ) : events.length === 0 ? (
-        <p className="text-muted text-sm">No events yet.</p>
+        <p className="text-muted text-sm text-center py-8">No upcoming events scheduled.</p>
       ) : (
         <div className="space-y-3">
           {events.map((event) => (
-            <Card key={event.id} className={event.isCancelled ? "opacity-50" : ""}>
-              <CardContent className="flex items-start justify-between py-3">
+            <div
+              key={event.id}
+              className={`bg-surface border border-border rounded-lg p-4 ${
+                event.isCancelled ? "opacity-50" : ""
+              }`}
+            >
+              <div className="flex items-start justify-between">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full ${
+                        event.type === "GAME" ? "bg-primary" : "bg-blue-500"
+                      }`}
+                    />
                     <span className="font-medium text-sm">{event.title}</span>
                     <Badge variant={event.type === "GAME" ? "warning" : event.type === "PRACTICE" ? "info" : "default"}>
                       {event.type}
                     </Badge>
                     {event.isCancelled && <Badge variant="danger">Cancelled</Badge>}
                   </div>
-                  <p className="text-xs text-muted mt-1">{formatDateTime(event.date)}</p>
-                  <p className="text-xs text-muted flex items-center gap-1">
+                  <p className="text-sm text-muted">{formatDateTime(event.date)}</p>
+                  <p className="text-sm text-muted flex items-center gap-1 mt-1">
                     <MapPin className="h-3 w-3" /> {event.locationName}
+                    {event.locationAddress && ` - ${event.locationAddress}`}
                   </p>
+                  {event.notes && (
+                    <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                      {event.notes}
+                    </p>
+                  )}
                 </div>
-                <div className="flex gap-1 shrink-0">
-                  <button onClick={() => startEdit(event)} className="p-1.5 hover:bg-gray-100 rounded">
-                    <Edit2 className="h-3.5 w-3.5 text-muted" />
-                  </button>
-                  <button onClick={() => deleteEvent(event.id)} className="p-1.5 hover:bg-gray-100 rounded">
-                    <Trash2 className="h-3.5 w-3.5 text-muted" />
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+                {isCoach && (
+                  <div className="flex gap-1 shrink-0 ml-2">
+                    <button onClick={() => startEdit(event)} className="p-1.5 hover:bg-gray-100 rounded">
+                      <Edit2 className="h-3.5 w-3.5 text-muted" />
+                    </button>
+                    <button onClick={() => deleteEvent(event.id)} className="p-1.5 hover:bg-gray-100 rounded">
+                      <Trash2 className="h-3.5 w-3.5 text-muted" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       )}
-    </CoachLayout>
+    </div>
   );
 }
 

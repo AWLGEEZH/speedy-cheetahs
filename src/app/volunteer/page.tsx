@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CoachLayout } from "@/components/layout/coach-layout";
-import { PageHeader } from "@/components/layout/page-header";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { VOLUNTEER_ROLE_TEMPLATES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
-import { X, Users } from "lucide-react";
+import { X, Users, HandHelping, UserPlus } from "lucide-react";
 
 interface VolunteerRole {
   id: string;
@@ -24,13 +23,37 @@ interface VolunteerRole {
   signups: { id: string; family: { id: string; parentName: string } }[];
 }
 
+const STORAGE_KEY = "speedy-cheetahs-volunteer";
+
 function VolunteerContent() {
+  const { isCoach } = useAuth();
   const [roles, setRoles] = useState<VolunteerRole[]>([]);
   const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Coach: add role form
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", slotsNeeded: "1", eventId: "" });
+
+  // Parent: sign-up
+  const [signingUp, setSigningUp] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [familyName, setFamilyName] = useState("");
+  const [familyPhone, setFamilyPhone] = useState("");
+
   const { addToast } = useToast();
+
+  // Load saved volunteer info from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const { name, phone } = JSON.parse(saved);
+        if (name) setFamilyName(name);
+        if (phone) setFamilyPhone(phone);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   async function load() {
     try {
@@ -47,7 +70,8 @@ function VolunteerContent() {
 
   useEffect(() => { load(); }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  // Coach: create role
+  async function handleCreateRole(e: React.FormEvent) {
     e.preventDefault();
     const res = await fetch("/api/volunteer/roles", {
       method: "POST",
@@ -64,30 +88,80 @@ function VolunteerContent() {
     }
   }
 
+  // Parent: sign up for a role
+  function handleTapRole(roleId: string) {
+    setSigningUp(signingUp === roleId ? null : roleId);
+  }
+
+  async function handleSignup(roleId: string) {
+    if (!familyName.trim()) { addToast("Please enter your name", "error"); return; }
+    if (!familyPhone.trim()) { addToast("Please enter your phone number", "error"); return; }
+
+    setSubmitting(true);
+    try {
+      const familyRes = await fetch("/api/families", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parentName: familyName.trim(), phone: familyPhone.trim() }),
+      });
+      const family = await familyRes.json();
+      if (!family.id) { addToast("Could not register. Please try again.", "error"); return; }
+
+      const res = await fetch("/api/volunteer/signups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ familyId: family.id, roleId }),
+      });
+
+      if (res.ok) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: familyName.trim(), phone: familyPhone.trim() })); } catch { /* ignore */ }
+        await load();
+        setSigningUp(null);
+        addToast("You're signed up! Thank you!", "success");
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to sign up", "error");
+      }
+    } catch {
+      addToast("Failed to sign up. Please try again.", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   // Group roles by event
   const grouped = roles.reduce<Record<string, VolunteerRole[]>>((acc, role) => {
-    const key = role.event.title;
+    const key = `${role.event.title}|||${role.event.date}`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(role);
     return acc;
   }, {});
 
   return (
-    <CoachLayout>
-      <PageHeader
-        title="Volunteer Management"
-        subtitle="Manage roles and view signups"
-        action={{ label: "+ Add Role", onClick: () => setShowForm(true) }}
-      />
+    <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-xl font-bold text-secondary">Volunteer</h1>
+          <p className="text-sm text-muted">
+            {isCoach ? "Manage roles and view signups" : "Sign up to help out at events"}
+          </p>
+        </div>
+        {isCoach && (
+          <Button size="sm" onClick={() => setShowForm(true)}>
+            + Add Role
+          </Button>
+        )}
+      </div>
 
-      {showForm && (
+      {/* Coach: Add Role Form */}
+      {isCoach && showForm && (
         <Card className="mb-4 border-primary">
           <CardContent className="py-4">
             <div className="flex justify-between mb-3">
               <h3 className="font-semibold text-sm">New Volunteer Role</h3>
               <button onClick={() => setShowForm(false)}><X className="h-4 w-4" /></button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleCreateRole} className="space-y-3">
               <Select
                 label="Event"
                 options={events.map((e) => ({ value: e.id, label: e.title }))}
@@ -119,45 +193,112 @@ function VolunteerContent() {
         </Card>
       )}
 
+      {/* Helper text for parents */}
+      {!isCoach && (
+        <div className="flex items-center gap-2 text-sm text-muted bg-surface border border-border rounded-lg px-4 py-3 mb-4">
+          <HandHelping className="h-5 w-5 shrink-0 text-primary" />
+          <span>Tap any open role below to sign up. Your info is saved for future signups.</span>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
       ) : Object.keys(grouped).length === 0 ? (
-        <p className="text-muted text-sm">No volunteer roles yet.</p>
+        <p className="text-muted text-sm text-center py-8">No volunteer roles available right now.</p>
       ) : (
         <div className="space-y-4">
-          {Object.entries(grouped).map(([eventTitle, eventRoles]) => (
-            <Card key={eventTitle}>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm">{eventTitle}</span>
-                  <span className="text-xs text-muted">{formatDate(eventRoles[0].event.date)}</span>
+          {Object.entries(grouped).map(([key, eventRoles]) => {
+            const [title, dateStr] = key.split("|||");
+            return (
+              <div key={key} className="bg-surface border border-border rounded-lg overflow-hidden">
+                <div className="bg-gray-50 px-4 py-2 border-b border-border">
+                  <span className="font-semibold text-sm">{title}</span>
+                  <span className="text-xs text-muted ml-2">{formatDate(dateStr)}</span>
                 </div>
-              </CardHeader>
-              <CardContent className="divide-y divide-border">
-                {eventRoles.map((role) => (
-                  <div key={role.id} className="py-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{role.name}</span>
-                      <Badge variant={role.signups.length >= role.slotsNeeded ? "success" : "warning"}>
-                        {role.signups.length}/{role.slotsNeeded}
-                      </Badge>
-                    </div>
-                    {role.signups.length > 0 && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Users className="h-3 w-3 text-muted" />
-                        <span className="text-xs text-muted">
-                          {role.signups.map((s) => s.family.parentName).join(", ")}
-                        </span>
+                <div className="divide-y divide-border">
+                  {eventRoles.map((role) => {
+                    const isFull = role.signups.length >= role.slotsNeeded;
+                    const isExpanded = signingUp === role.id;
+
+                    return (
+                      <div key={role.id}>
+                        {/* Role row */}
+                        <button
+                          type="button"
+                          onClick={() => !isFull && !isCoach && handleTapRole(role.id)}
+                          disabled={isFull || isCoach}
+                          className={`w-full text-left px-4 py-3 transition-colors ${
+                            isFull
+                              ? "opacity-70 cursor-default"
+                              : isCoach
+                                ? "cursor-default"
+                                : isExpanded
+                                  ? "bg-primary/5"
+                                  : "hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">{role.name}</span>
+                                {!isFull && !isExpanded && !isCoach && (
+                                  <UserPlus className="h-3.5 w-3.5 text-primary" />
+                                )}
+                              </div>
+                              {role.description && (
+                                <p className="text-xs text-muted">{role.description}</p>
+                              )}
+                            </div>
+                            <Badge variant={isFull ? "success" : "warning"}>
+                              {role.signups.length}/{role.slotsNeeded} filled
+                            </Badge>
+                          </div>
+                          {role.signups.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {role.signups.map((s) => (
+                                <span
+                                  key={s.id}
+                                  className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
+                                >
+                                  {s.family.parentName}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </button>
+
+                        {/* Inline sign-up form (parents only) */}
+                        {isExpanded && !isCoach && (
+                          <div className="px-4 pb-4 bg-primary/5 border-t border-primary/20">
+                            <div className="pt-3 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                                  Sign up for {role.name}
+                                </p>
+                                <button type="button" onClick={() => setSigningUp(null)} className="text-muted hover:text-foreground p-1">
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <Input label="Your Name" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Parent/Guardian name" required />
+                                <Input label="Phone Number" type="tel" value={familyPhone} onChange={(e) => setFamilyPhone(e.target.value)} placeholder="(555) 123-4567" required />
+                              </div>
+                              <Button size="sm" onClick={() => handleSignup(role.id)} disabled={submitting} className="w-full sm:w-auto">
+                                {submitting ? "Signing up..." : "Sign Up"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
-    </CoachLayout>
+    </div>
   );
 }
 

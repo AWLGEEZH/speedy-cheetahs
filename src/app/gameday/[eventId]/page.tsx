@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { CoachLayout } from "@/components/layout/coach-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,21 +57,21 @@ function GameDayContent() {
 
   if (loading) {
     return (
-      <CoachLayout>
+      <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
-      </CoachLayout>
+      </div>
     );
   }
 
   return (
-    <CoachLayout>
+    <div className="max-w-3xl mx-auto px-4 py-6">
       <PageHeader
         title={event?.title || "Game Day"}
         subtitle={event ? `${formatDateTime(event.date)} - ${event.locationName}` : ""}
         backHref="/gameday"
       />
 
-      {/* Tab bar - large touch targets for mobile */}
+      {/* Tab bar */}
       <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1">
         {([
           { key: "attendance" as Tab, label: "Attendance", icon: Users },
@@ -95,15 +94,13 @@ function GameDayContent() {
       {tab === "attendance" && <AttendanceTab eventId={eventId} players={players} addToast={addToast} />}
       {tab === "batting" && <BattingTab eventId={eventId} players={players} addToast={addToast} />}
       {tab === "fielding" && <FieldingTab eventId={eventId} players={players} addToast={addToast} />}
-    </CoachLayout>
+    </div>
   );
 }
 
 // ─── ATTENDANCE TAB ────────────────────────────
 function AttendanceTab({
-  eventId,
-  players,
-  addToast,
+  eventId, players, addToast,
 }: {
   eventId: string;
   players: PlayerWithFamily[];
@@ -169,9 +166,7 @@ function AttendanceTab({
 
 // ─── BATTING TAB ───────────────────────────────
 function BattingTab({
-  eventId,
-  players,
-  addToast,
+  eventId, players, addToast,
 }: {
   eventId: string;
   players: PlayerWithFamily[];
@@ -209,7 +204,6 @@ function BattingTab({
   }
 
   async function advanceBatter(action: "NEXT_BATTER" | "UNDO") {
-    // Optimistic update
     if (action === "NEXT_BATTER") {
       setBattingEntries((prev) => {
         const updated = [...prev];
@@ -259,7 +253,6 @@ function BattingTab({
 
   return (
     <div className="space-y-4">
-      {/* Current batter - large display */}
       <Card className="border-primary border-2">
         <CardContent className="py-5 text-center">
           <p className="text-xs text-primary font-medium uppercase mb-1">Now Batting</p>
@@ -273,7 +266,6 @@ function BattingTab({
         </CardContent>
       </Card>
 
-      {/* On deck */}
       <div className="bg-gray-50 rounded-lg px-4 py-2 text-center">
         <span className="text-xs text-muted">On Deck: </span>
         <span className="text-sm font-medium">
@@ -281,26 +273,15 @@ function BattingTab({
         </span>
       </div>
 
-      {/* Action buttons - big touch targets */}
       <div className="flex gap-3">
-        <Button
-          onClick={() => advanceBatter("NEXT_BATTER")}
-          size="xl"
-          className="flex-1"
-        >
+        <Button onClick={() => advanceBatter("NEXT_BATTER")} size="xl" className="flex-1">
           <ChevronRight className="h-5 w-5 mr-2" /> Next Batter
         </Button>
-        <Button
-          onClick={() => advanceBatter("UNDO")}
-          variant="outline"
-          size="xl"
-          className="w-20"
-        >
+        <Button onClick={() => advanceBatter("UNDO")} variant="outline" size="xl" className="w-20">
           <Undo2 className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Full lineup list */}
       <Card>
         <CardHeader><span className="font-semibold text-sm">Full Lineup</span></CardHeader>
         <CardContent className="divide-y divide-border max-h-[40vh] overflow-y-auto scrollbar-thin">
@@ -334,9 +315,7 @@ function BattingTab({
 
 // ─── FIELDING TAB ──────────────────────────────
 function FieldingTab({
-  eventId,
-  players,
-  addToast,
+  eventId, players, addToast,
 }: {
   eventId: string;
   players: PlayerWithFamily[];
@@ -353,7 +332,6 @@ function FieldingTab({
     if (data.gameState) {
       setFieldingEntries(data.gameState.fieldingEntries || []);
       setCurrentInning(data.gameState.currentInning || 1);
-      // Load current inning assignments
       const currentEntries = (data.gameState.fieldingEntries || []).filter(
         (e: FieldingEntryWithPlayer) => e.inning === (data.gameState.currentInning || 1)
       );
@@ -374,16 +352,13 @@ function FieldingTab({
 
   async function saveFielding() {
     const assignmentList = Object.entries(assignments).map(([playerId, position]) => ({
-      playerId,
-      position,
+      playerId, position,
     }));
-
     const res = await fetch(`/api/gameday/${eventId}/fielding`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ inning: currentInning, assignments: assignmentList }),
     });
-
     if (res.ok) {
       await loadFielding();
       addToast(`Inning ${currentInning} positions saved`, "success");
@@ -409,7 +384,6 @@ function FieldingTab({
 
   if (loading) return <div className="flex justify-center py-8"><Spinner /></div>;
 
-  // Calculate per-player stats
   const playerStats = players.map((p) => {
     const entries = fieldingEntries.filter((e) => e.playerId === p.id);
     const totalOuts = entries.reduce((sum, e) => sum + e.outsRecorded, 0);
@@ -420,7 +394,6 @@ function FieldingTab({
 
   return (
     <div className="space-y-4">
-      {/* Inning indicator */}
       <div className="flex items-center justify-between bg-secondary text-white rounded-lg px-4 py-3">
         <span className="font-bold">Inning {currentInning}</span>
         <div className="flex gap-2">
@@ -433,7 +406,6 @@ function FieldingTab({
         </div>
       </div>
 
-      {/* Position assignments */}
       <Card>
         <CardHeader>
           <div className="flex justify-between">
@@ -462,7 +434,6 @@ function FieldingTab({
         </CardContent>
       </Card>
 
-      {/* Player stats summary */}
       <Card>
         <CardHeader><span className="font-semibold text-sm">Player Field Stats</span></CardHeader>
         <CardContent>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CoachLayout } from "@/components/layout/coach-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -204,17 +203,17 @@ function SettingsContent() {
 
   if (loading) {
     return (
-      <CoachLayout>
+      <div className="max-w-3xl mx-auto px-4 py-6">
         <PageHeader title="Settings" subtitle="Team configuration" />
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
-      </CoachLayout>
+      </div>
     );
   }
 
   return (
-    <CoachLayout>
+    <div className="max-w-3xl mx-auto px-4 py-6">
       <PageHeader title="Settings" subtitle="Team configuration" />
 
       <div className="space-y-4">
@@ -459,25 +458,25 @@ function SettingsContent() {
             <div>
               <label className="text-xs text-muted block mb-1">Schedule Page</label>
               <code className="text-xs bg-gray-100 px-2 py-1 rounded block break-all">
-                {baseUrl}/team/schedule
+                {baseUrl}/schedule
               </code>
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Volunteer Sign-Up</label>
               <code className="text-xs bg-gray-100 px-2 py-1 rounded block break-all">
-                {baseUrl}/team/volunteer
+                {baseUrl}/volunteer
               </code>
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Updates Feed</label>
               <code className="text-xs bg-gray-100 px-2 py-1 rounded block break-all">
-                {baseUrl}/team/updates
+                {baseUrl}/updates
               </code>
             </div>
             <div>
               <label className="text-xs text-muted block mb-1">Parent Registration</label>
               <code className="text-xs bg-gray-100 px-2 py-1 rounded block break-all">
-                {baseUrl}/team/register
+                {baseUrl}/register
               </code>
             </div>
           </CardContent>
@@ -509,7 +508,7 @@ function SettingsContent() {
           </CardContent>
         </Card>
       </div>
-    </CoachLayout>
+    </div>
   );
 }
 
