@@ -27,7 +27,7 @@ const publicTabs = [
   { href: "/schedule", label: "Schedule", icon: Calendar },
   { href: "/updates", label: "Updates", icon: Megaphone },
   { href: "/volunteer", label: "Volunteer", icon: HandHelping },
-  { href: "/register", label: "Register", icon: UserPlus },
+  { href: "/register", label: "Parent Registration", icon: UserPlus },
 ];
 
 const coachTabs = [

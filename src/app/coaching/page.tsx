@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatDateTime } from "@/lib/utils";
@@ -14,7 +12,7 @@ import { Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 interface Session {
   id: string;
   goals: string;
-  observations: string;
+  observations: string | null;
   focusArea: string | null;
   recommendation: string;
   createdAt: string;
@@ -25,7 +23,7 @@ function CoachingContent() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [form, setForm] = useState({ goals: "", observations: "", focusArea: "" });
+  const [question, setQuestion] = useState("");
   const [result, setResult] = useState<string | null>(null);
   const { addToast } = useToast();
 
@@ -49,40 +47,54 @@ function CoachingContent() {
       const res = await fetch("/api/ai/coaching", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ question }),
       });
       const data = await res.json();
       if (res.ok) {
         setResult(data.recommendation);
         setSessions((prev) => [data, ...prev]);
-        addToast("Practice plan generated", "success");
+        setQuestion("");
+        addToast("Response generated", "success");
       } else {
-        addToast(data.error || "Failed to generate plan", "error");
+        addToast(data.error || "Failed to generate response", "error");
       }
     } catch {
-      addToast("Failed to generate plan", "error");
+      addToast("Failed to generate response", "error");
     } finally {
       setGenerating(false);
     }
   }
 
+  function getSessionLabel(s: Session): string {
+    // Use the goals field (which now stores the question text)
+    const text = s.goals || s.focusArea || "Coaching Question";
+    return text.length > 80 ? text.slice(0, 80) + "..." : text;
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
-      <PageHeader title="AI Coaching Assistant" subtitle="Get practice plan recommendations" />
+      <div className="mb-4">
+        <h1 className="text-xl font-bold text-secondary">Coaching Insights</h1>
+        <p className="text-sm text-muted">Ask AI for practice plans, drills, strategies, and coaching advice</p>
+      </div>
 
       <Card className="mb-6">
         <CardHeader>
           <h3 className="font-semibold text-sm flex items-center gap-2">
-            <Lightbulb className="h-4 w-4 text-primary" /> Generate Practice Plan
+            <Lightbulb className="h-4 w-4 text-primary" /> Ask AI
           </h3>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-3">
-            <Textarea label="Coaching Goals" value={form.goals} onChange={(e) => setForm({ ...form, goals: e.target.value })} placeholder="What do you want to focus on?" rows={3} required />
-            <Textarea label="Player Observations" value={form.observations} onChange={(e) => setForm({ ...form, observations: e.target.value })} placeholder="What have you noticed?" rows={3} required />
-            <Input label="Focus Area (optional)" value={form.focusArea} onChange={(e) => setForm({ ...form, focusArea: e.target.value })} placeholder="e.g. Hitting, Fielding, Base Running" />
-            <Button type="submit" disabled={generating}>
-              {generating ? "Generating..." : "Generate Practice Plan"}
+            <Textarea
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="e.g. Create a 60-minute practice plan focused on hitting fundamentals, or How should I handle a player who is afraid of the ball?"
+              rows={4}
+              required
+            />
+            <Button type="submit" disabled={generating || !question.trim()}>
+              {generating ? "Generating..." : "Ask AI"}
             </Button>
           </form>
         </CardContent>
@@ -93,7 +105,7 @@ function CoachingContent() {
       {result && !generating && (
         <Card className="mb-6 border-primary">
           <CardHeader>
-            <h3 className="font-semibold text-sm text-primary">Generated Practice Plan</h3>
+            <h3 className="font-semibold text-sm text-primary">AI Response</h3>
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm">{result}</div>
@@ -105,17 +117,17 @@ function CoachingContent() {
         <div className="flex justify-center py-8"><Spinner /></div>
       ) : sessions.length > 0 && (
         <div>
-          <h3 className="font-semibold text-sm text-secondary mb-3">Previous Plans</h3>
+          <h3 className="font-semibold text-sm text-secondary mb-3">Previous Questions</h3>
           <div className="space-y-2">
             {sessions.map((s) => (
               <Card key={s.id}>
                 <CardContent className="py-3 cursor-pointer" onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-sm font-medium">{s.focusArea || "General"} Practice Plan</span>
+                    <div className="min-w-0 flex-1 mr-2">
+                      <span className="text-sm font-medium">{getSessionLabel(s)}</span>
                       <span className="text-xs text-muted ml-2">{formatDateTime(s.createdAt)}</span>
                     </div>
-                    {expandedId === s.id ? <ChevronUp className="h-4 w-4 text-muted" /> : <ChevronDown className="h-4 w-4 text-muted" />}
+                    {expandedId === s.id ? <ChevronUp className="h-4 w-4 text-muted shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted shrink-0" />}
                   </div>
                   {expandedId === s.id && (
                     <div className="mt-3 pt-3 border-t border-border">

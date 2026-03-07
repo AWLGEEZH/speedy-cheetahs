@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
-import { generatePracticePlan, getKnowledgeBaseContext } from "@/lib/claude";
+import { generateCoachingResponse, getKnowledgeBaseContext } from "@/lib/claude";
 import { coachingRequestSchema } from "@/lib/validators";
 
 export async function GET() {
@@ -32,19 +32,17 @@ export async function POST(request: Request) {
     }
 
     const kbContext = await getKnowledgeBaseContext();
-    const recommendation = await generatePracticePlan(
-      parsed.data.goals,
-      parsed.data.observations,
-      parsed.data.focusArea,
+    const recommendation = await generateCoachingResponse(
+      parsed.data.question,
       kbContext
     );
 
     const coachingSession = await prisma.coachingSession.create({
       data: {
         coachId: session.coachId,
-        goals: parsed.data.goals,
-        observations: parsed.data.observations,
-        focusArea: parsed.data.focusArea,
+        goals: parsed.data.question,
+        observations: null,
+        focusArea: null,
         recommendation,
       },
     });
@@ -54,6 +52,6 @@ export async function POST(request: Request) {
     if (e instanceof Error && e.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.json({ error: "Failed to generate plan" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to generate response" }, { status: 500 });
   }
 }

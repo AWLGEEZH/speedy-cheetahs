@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Calendar, UserPlus, HandHelping, LogIn } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/utils";
 
@@ -42,24 +43,34 @@ export default async function HomePage() {
           <div className="text-6xl mb-4">&#x1F406;</div>
           <h1 className="text-4xl font-bold mb-2">Speedy Cheetahs</h1>
           <p className="text-white/80 text-lg">Farm-1 Coach Pitch Baseball</p>
-          <div className="mt-6 flex gap-3 justify-center flex-wrap">
+          <div className="mt-8 grid grid-cols-2 gap-4 max-w-lg mx-auto">
             <Link
               href="/schedule"
-              className="px-5 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
+              className="flex flex-col items-center gap-2 px-4 py-5 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors text-center"
             >
-              View Schedule
+              <Calendar className="h-6 w-6" />
+              <span className="text-sm">View Schedule</span>
+            </Link>
+            <Link
+              href="/register"
+              className="flex flex-col items-center gap-2 px-4 py-5 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors text-center"
+            >
+              <UserPlus className="h-6 w-6" />
+              <span className="text-sm">Parent Registration</span>
             </Link>
             <Link
               href="/volunteer"
-              className="px-5 py-2.5 bg-white/10 text-white rounded-lg font-medium hover:bg-white/20 transition-colors"
+              className="flex flex-col items-center gap-2 px-4 py-5 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-colors text-center"
             >
-              Volunteer Sign-Up
+              <HandHelping className="h-6 w-6" />
+              <span className="text-sm">Volunteer Sign-Up</span>
             </Link>
             <Link
               href="/login"
-              className="px-5 py-2.5 bg-white/10 text-white rounded-lg font-medium hover:bg-white/20 transition-colors"
+              className="flex flex-col items-center gap-2 px-4 py-5 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-colors text-center"
             >
-              Coach Login
+              <LogIn className="h-6 w-6" />
+              <span className="text-sm">Coach Login</span>
             </Link>
           </div>
         </div>

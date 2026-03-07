@@ -64,6 +64,7 @@ export interface UpdateWithCoach {
   id: string;
   title: string;
   message: string;
+  coachId: string;
   smsSent: boolean;
   smsCount: number;
   emailSent: boolean;

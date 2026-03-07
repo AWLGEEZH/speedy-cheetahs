@@ -80,6 +80,11 @@ export const postUpdateSchema = z.object({
   sendEmail: z.boolean().default(false),
 });
 
+export const updateUpdateSchema = z.object({
+  title: z.string().min(1).max(200),
+  message: z.string().min(1).max(2000),
+});
+
 export const attendanceRsvpSchema = z.object({
   playerId: z.string(),
   familyId: z.string(),
@@ -126,9 +131,7 @@ export const rulesQuerySchema = z.object({
 });
 
 export const coachingRequestSchema = z.object({
-  goals: z.string().min(1).max(2000),
-  observations: z.string().min(1).max(2000),
-  focusArea: z.string().max(100).optional(),
+  question: z.string().min(1).max(5000),
 });
 
 export const saveRulesSchema = z.object({

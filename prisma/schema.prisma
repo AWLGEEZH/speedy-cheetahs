@@ -272,7 +272,7 @@ model CoachingSession {
   id             String   @id @default(cuid())
   coachId        String
   goals          String   @db.Text
-  observations   String   @db.Text
+  observations   String?  @db.Text
   focusArea      String?
   recommendation String   @db.Text
   createdAt      DateTime @default(now())
