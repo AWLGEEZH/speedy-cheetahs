@@ -13,21 +13,39 @@ export async function GET(request: Request) {
 
     const normalized = normalizePhone(phone);
 
-    const family = await prisma.family.findFirst({
+    const playerSelect = {
+      id: true,
+      firstName: true,
+      lastName: true,
+      jerseyNumber: true,
+      familyId: true,
+    } as const;
+
+    // Search primary family phone first
+    let family = await prisma.family.findFirst({
       where: { phone: normalized },
       include: {
-        players: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            jerseyNumber: true,
-            familyId: true,
-          },
-          orderBy: { firstName: "asc" },
-        },
+        players: { select: playerSelect, orderBy: { firstName: "asc" } },
       },
     });
+
+    // If not found, search additional contacts' phone numbers
+    if (!family) {
+      const contact = await prisma.contact.findFirst({
+        where: { phone: normalized },
+        include: {
+          family: {
+            include: {
+              players: { select: playerSelect, orderBy: { firstName: "asc" } },
+            },
+          },
+        },
+      });
+
+      if (contact) {
+        family = contact.family;
+      }
+    }
 
     if (!family) {
       return NextResponse.json({ error: "No family found" }, { status: 404 });
