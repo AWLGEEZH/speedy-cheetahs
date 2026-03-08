@@ -46,7 +46,7 @@ export function UnifiedLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Don't show nav on auth pages
-  if (pathname === "/login" || pathname === "/forgot-password" || pathname === "/reset-password") {
+  if (pathname === "/login" || pathname === "/forgot-password" || pathname === "/reset-password" || pathname === "/offline") {
     return <>{children}</>;
   }
 

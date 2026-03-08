@@ -6,30 +6,7 @@ Planned features and improvements for the team portal.
 
 ## Backlog Items
 
-### 1. Progressive Web App (PWA)
-
-**Priority:** Medium
-**Effort:** ~1.5 hours
-
-Convert the portal into an installable mobile app experience.
-
-**Scope:**
-- Add `manifest.json` with app name, icons, theme colors, display mode
-- Add service worker for asset caching and offline shell
-- Add iOS and Android install prompt meta tags
-- Generate app icon sizes from team logo
-- Custom splash screen with Cheetah branding
-- Full-screen mode (hides browser URL bar and chrome)
-
-**Benefits:**
-- Parents and coaches get an app icon on their phone home screen
-- Faster page loads on repeat visits (cached assets)
-- Feels like a native app without app store distribution
-- Branded offline screen instead of browser error page
-
----
-
-### 2. Photo Upload & Sharing
+### 1. Photo Upload & Sharing
 
 **Priority:** Medium
 **Effort:** ~5 hours
@@ -63,7 +40,15 @@ Add the ability to upload, organize, and share team photos.
 
 ## Completed
 
-### ~~3. Volunteer Reminder Notifications~~ ✅
+### ~~PWA (Progressive Web App)~~ ✅
+
+**Completed:** March 2026
+
+Installable app experience with manifest, service worker, offline page, app icons, and full-screen standalone mode.
+
+---
+
+### ~~Volunteer Reminder Notifications~~ ✅
 
 **Completed:** March 2026
 

@@ -208,7 +208,20 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 ---
 
-## 17. Infrastructure
+## 17. Progressive Web App (PWA)
+
+- [x] Web App Manifest (`manifest.json`) with app name, icons, theme color, standalone display
+- [x] Service worker with network-first caching strategy
+- [x] Branded offline fallback page (Cheetah logo + retry button)
+- [x] App icons: 192x192, 512x512 PNG + Apple Touch Icon (180x180) + Favicon
+- [x] iOS support: `apple-mobile-web-app-capable`, status bar styling
+- [x] "Add to Home Screen" support on iOS and Android
+- [x] Full-screen standalone mode (hides browser URL bar)
+- [x] Automatic service worker registration on page load
+
+---
+
+## 18. Infrastructure
 
 - [x] Next.js 16 (App Router) with TypeScript
 - [x] Tailwind CSS v4 for styling
