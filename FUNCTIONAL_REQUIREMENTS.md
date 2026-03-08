@@ -105,6 +105,7 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 ### SMS (Twilio)
 - [x] Bulk SMS to opted-in families when posting updates
+- [x] SMS sent to additional contacts (second parent, emergency contacts) for opted-in families
 - [x] Phone number normalization (E.164 format)
 - [x] Message prefix: "[Speedy Cheetahs]"
 - [x] Sent vs. failed tracking per update
@@ -112,6 +113,7 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 ### Email (Nodemailer / Gmail SMTP)
 - [x] Bulk email to opted-in families when posting updates
+- [x] Email sent to additional contacts (second parent, emergency contacts) for opted-in families
 - [x] HTML-formatted emails with team branding
 - [x] Unsubscribe instructions included
 - [x] Sent vs. failed tracking per update

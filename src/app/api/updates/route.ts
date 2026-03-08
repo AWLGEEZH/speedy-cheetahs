@@ -36,14 +36,20 @@ export async function POST(request: Request) {
     let emailSent = false;
     let emailCount = 0;
 
-    // Send SMS to opted-in families
+    // Send SMS to opted-in families + additional contacts
     if (sendSms) {
       try {
         const families = await prisma.family.findMany({
           where: { smsOptIn: true },
-          select: { phone: true },
+          select: { phone: true, contacts: { select: { phone: true } } },
         });
-        const phones = families.map((f) => f.phone);
+        const phones: string[] = [];
+        for (const f of families) {
+          phones.push(f.phone);
+          for (const c of f.contacts) {
+            if (c.phone) phones.push(c.phone);
+          }
+        }
         if (phones.length > 0) {
           const result = await sendBulkSms(
             phones,
@@ -57,16 +63,20 @@ export async function POST(request: Request) {
       }
     }
 
-    // Send email to opted-in families
+    // Send email to opted-in families + additional contacts
     if (sendEmail) {
       try {
         const families = await prisma.family.findMany({
           where: { emailOptIn: true, email: { not: null }, NOT: { email: "" } },
-          select: { email: true },
+          select: { email: true, contacts: { select: { email: true } } },
         });
-        const emails = families
-          .map((f) => f.email)
-          .filter((e): e is string => !!e);
+        const emails: string[] = [];
+        for (const f of families) {
+          if (f.email) emails.push(f.email);
+          for (const c of f.contacts) {
+            if (c.email) emails.push(c.email);
+          }
+        }
         if (emails.length > 0) {
           const result = await sendBulkEmail(
             emails,

@@ -42,7 +42,7 @@ export async function GET(request: Request) {
         },
       },
       include: {
-        family: true,
+        family: { include: { contacts: true } },
         role: {
           include: {
             event: true,
@@ -60,16 +60,27 @@ export async function GET(request: Request) {
       const message = `Reminder: You're volunteering as ${role.name} tomorrow (${eventDate}) at ${eventTime} at ${event.locationName}. Thank you!`;
 
       try {
-        // Send SMS if family has phone and opted in
-        if (family.phone && family.smsOptIn) {
-          await sendBulkSms([family.phone], message);
-          results.reminders24h.sms++;
+        // Collect all phones (primary + additional contacts)
+        if (family.smsOptIn) {
+          const phones: string[] = [family.phone];
+          for (const c of family.contacts) {
+            if (c.phone) phones.push(c.phone);
+          }
+          await sendBulkSms(phones, message);
+          results.reminders24h.sms += phones.length;
         }
 
-        // Send email if family has email and opted in
-        if (family.email && family.emailOptIn) {
-          await sendBulkEmail([family.email], "Volunteer Reminder — Tomorrow", message);
-          results.reminders24h.email++;
+        // Collect all emails (primary + additional contacts)
+        if (family.emailOptIn) {
+          const emails: string[] = [];
+          if (family.email) emails.push(family.email);
+          for (const c of family.contacts) {
+            if (c.email) emails.push(c.email);
+          }
+          if (emails.length > 0) {
+            await sendBulkEmail(emails, "Volunteer Reminder — Tomorrow", message);
+            results.reminders24h.email += emails.length;
+          }
         }
 
         // Mark as sent
@@ -98,7 +109,7 @@ export async function GET(request: Request) {
         },
       },
       include: {
-        family: true,
+        family: { include: { contacts: true } },
         role: {
           include: {
             event: true,
@@ -115,16 +126,27 @@ export async function GET(request: Request) {
       const message = `Heads up! You're volunteering as ${role.name} in 90 minutes (${eventTime}) at ${event.locationName}. See you there!`;
 
       try {
-        // Send SMS if family has phone and opted in
-        if (family.phone && family.smsOptIn) {
-          await sendBulkSms([family.phone], message);
-          results.reminders90m.sms++;
+        // Collect all phones (primary + additional contacts)
+        if (family.smsOptIn) {
+          const phones: string[] = [family.phone];
+          for (const c of family.contacts) {
+            if (c.phone) phones.push(c.phone);
+          }
+          await sendBulkSms(phones, message);
+          results.reminders90m.sms += phones.length;
         }
 
-        // Send email if family has email and opted in
-        if (family.email && family.emailOptIn) {
-          await sendBulkEmail([family.email], "Volunteer Reminder — Starting Soon", message);
-          results.reminders90m.email++;
+        // Collect all emails (primary + additional contacts)
+        if (family.emailOptIn) {
+          const emails: string[] = [];
+          if (family.email) emails.push(family.email);
+          for (const c of family.contacts) {
+            if (c.email) emails.push(c.email);
+          }
+          if (emails.length > 0) {
+            await sendBulkEmail(emails, "Volunteer Reminder — Starting Soon", message);
+            results.reminders90m.email += emails.length;
+          }
         }
 
         // Mark as sent
