@@ -59,41 +59,15 @@ Add the ability to upload, organize, and share team photos.
 
 ---
 
-### 3. Volunteer Reminder Notifications
-
-**Priority:** Medium
-**Effort:** ~3 hours
-
-Automated SMS and email reminders to parents who have signed up for volunteer roles.
-
-**Reminders:**
-- **24 hours before** the event — advance notice
-- **90 minutes before** the event — heads-up reminder
-
-**Scope:**
-- Add `reminder24hSent` and `reminder90mSent` fields to VolunteerSignup schema
-- Create `/api/cron/volunteer-reminders` endpoint with secret-key auth
-- Query upcoming events, find volunteer signups, send SMS/email via existing Twilio + Nodemailer
-- Mark reminders as sent to prevent duplicates
-- Skip cancelled events
-- Set up external cron (cron-job.org, free) to hit endpoint every 15 minutes
-
-**Message examples:**
-- 24hr: "[Speedy Cheetahs] Reminder: You're volunteering as Scoreboard Operator tomorrow at 10:00 AM at Lions Park."
-- 90min: "[Speedy Cheetahs] Heads up! You're volunteering as Scoreboard Operator in 90 minutes at Lions Park."
-
-**Dependencies:**
-- Existing SMS (Twilio) and email (Nodemailer) infrastructure — already built
-- External cron service (cron-job.org — free tier) or Railway cron
-- `CRON_SECRET` environment variable for endpoint security
-
 ---
 
 ## Completed
 
-_Items moved here after implementation._
+### ~~3. Volunteer Reminder Notifications~~ ✅
 
-_(none yet)_
+**Completed:** March 2026
+
+Automated SMS and email reminders to volunteer parents — 24 hours and 90 minutes before events. Cron endpoint at `/api/cron/volunteer-reminders` secured with `CRON_SECRET`. Requires external cron service (cron-job.org) to hit endpoint every 15 minutes.
 
 ---
 

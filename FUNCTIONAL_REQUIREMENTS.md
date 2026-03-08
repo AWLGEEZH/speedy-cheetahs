@@ -116,6 +116,14 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 - [x] Unsubscribe instructions included
 - [x] Sent vs. failed tracking per update
 
+### Volunteer Reminders (Automated)
+- [x] Automated 24-hour advance reminder to volunteer parents (SMS + email)
+- [x] Automated 90-minute heads-up reminder to volunteer parents (SMS + email)
+- [x] Cron endpoint (`/api/cron/volunteer-reminders`) secured with `CRON_SECRET`
+- [x] Duplicate prevention — reminders only sent once per signup
+- [x] Cancelled events automatically skipped
+- [x] Respects family SMS and email opt-in preferences
+
 ---
 
 ## 10. Coaching Insights (AI-Powered)

@@ -156,10 +156,12 @@ model VolunteerRole {
 }
 
 model VolunteerSignup {
-  id        String   @id @default(cuid())
-  familyId  String
-  roleId    String
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  familyId        String
+  roleId          String
+  reminder24hSent Boolean  @default(false)
+  reminder90mSent Boolean  @default(false)
+  createdAt       DateTime @default(now())
 
   family Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
   role   VolunteerRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
