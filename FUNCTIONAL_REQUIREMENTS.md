@@ -36,6 +36,8 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 - [x] Public schedule view — parents see all upcoming events without login
 - [x] Event type indicators (red = game, blue = practice)
 - [x] Chronological display with formatted dates and times
+- [x] RSVP count badge on game events (confirmed players count)
+- [x] RSVP link on game event cards — navigates to `/rsvp/[eventId]`
 
 ---
 
@@ -75,6 +77,18 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 ---
 
+## 6b. Parent RSVP (Public)
+
+- [x] Phone number lookup — parents enter phone to find their family
+- [x] Family-filtered player list — only shows players linked to matched family
+- [x] Phone number saved in localStorage for repeat visits (auto-lookup)
+- [x] "Show All Players" fallback for unregistered families
+- [x] "Change" link to reset and look up a different family
+- [x] Yes/No RSVP buttons per player (CONFIRMED/DECLINED)
+- [x] Info text: responses flow to Game Day attendance automatically
+
+---
+
 ## 7. Game Day Tracking
 
 - [x] Game selector with status badges (Not Started, Live, Done)
@@ -82,8 +96,15 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 - [x] One-tap toggle between attendance states
 - [x] Attendance counter (confirmed vs. total)
 - [x] Real-time sync (10-second polling)
+- [x] RSVP data auto-syncs to Game Day attendance (same DB table)
 - [x] **Batting tab** — initialize lineup, track batting order and at-bats
 - [x] **Fielding tab** — assign field positions to players
+- [x] 6 outs per inning tracking with visual dot indicator
+- [x] Auto-advance to next inning when 6 outs recorded
+- [x] Record Out disabled when inning is complete
+- [x] Auto-assign fielding positions for confirmed/present players
+- [x] Position rotation across innings for fair play
+- [x] Players sorted by attendance status (confirmed first, absent last)
 
 ---
 

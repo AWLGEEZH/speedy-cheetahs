@@ -25,7 +25,11 @@ export async function GET(request: Request) {
             signups: { include: { family: { select: { id: true, parentName: true } } } },
           },
         },
-        _count: { select: { attendanceRsvps: true } },
+        _count: {
+          select: {
+            attendanceRsvps: { where: { status: "CONFIRMED" } },
+          },
+        },
       },
     });
 

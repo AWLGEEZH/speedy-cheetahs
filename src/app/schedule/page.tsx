@@ -12,7 +12,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatDateTime } from "@/lib/utils";
 import { EVENT_TYPES } from "@/lib/constants";
-import { X, MapPin, Edit2, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { X, MapPin, Edit2, Trash2, Users } from "lucide-react";
 
 interface Event {
   id: string;
@@ -25,6 +26,7 @@ interface Event {
   locationAddress: string | null;
   notes: string | null;
   isCancelled: boolean;
+  _count?: { attendanceRsvps: number };
 }
 
 function ScheduleContent() {
@@ -194,6 +196,17 @@ function ScheduleContent() {
                     <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
                       {event.notes}
                     </p>
+                  )}
+                  {event.type === "GAME" && !event.isCancelled && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="success">
+                        <Users className="h-3 w-3 mr-1 inline" />
+                        {event._count?.attendanceRsvps ?? 0} confirmed
+                      </Badge>
+                      <Link href={`/rsvp/${event.id}`}>
+                        <Button size="sm" variant="outline">RSVP</Button>
+                      </Link>
+                    </div>
                   )}
                 </div>
                 {isCoach && (

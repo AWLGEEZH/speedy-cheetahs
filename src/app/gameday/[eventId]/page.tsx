@@ -10,9 +10,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { usePolling } from "@/hooks/use-polling";
 import { cn, formatDateTime } from "@/lib/utils";
-import { FIELD_POSITIONS } from "@/lib/constants";
+import { FIELD_POSITIONS, OUTS_PER_INNING } from "@/lib/constants";
 import type { PlayerWithFamily, BattingEntryWithPlayer, FieldingEntryWithPlayer } from "@/types";
-import { Users, ListOrdered, Diamond, ChevronRight, Undo2, Plus, CircleDot } from "lucide-react";
+import { Users, ListOrdered, Diamond, ChevronRight, Undo2, Plus, CircleDot, Wand2 } from "lucide-react";
 
 type Tab = "attendance" | "batting" | "fielding";
 
@@ -325,10 +325,30 @@ function FieldingTab({
   const [currentInning, setCurrentInning] = useState(1);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [inningOuts, setInningOuts] = useState(0);
+  const [outsPerInning, setOutsPerInning] = useState(OUTS_PER_INNING);
+  const [confirmedPlayerIds, setConfirmedPlayerIds] = useState<Set<string>>(new Set());
+
+  // Load attendance for auto-assign
+  useEffect(() => {
+    async function loadAttendance() {
+      try {
+        const res = await fetch(`/api/gameday/${eventId}/attendance`);
+        const rsvps: { playerId: string; status: string }[] = await res.json();
+        const confirmed = new Set(
+          rsvps.filter((r) => r.status === "CONFIRMED").map((r) => r.playerId)
+        );
+        setConfirmedPlayerIds(confirmed);
+      } catch { /* ignore */ }
+    }
+    loadAttendance();
+  }, [eventId]);
 
   const loadFielding = useCallback(async () => {
     const res = await fetch(`/api/gameday/${eventId}/fielding`);
     const data = await res.json();
+    setInningOuts(data.inningOuts ?? 0);
+    setOutsPerInning(data.outsPerInning ?? OUTS_PER_INNING);
     if (data.gameState) {
       setFieldingEntries(data.gameState.fieldingEntries || []);
       setCurrentInning(data.gameState.currentInning || 1);
@@ -372,14 +392,60 @@ function FieldingTab({
       body: JSON.stringify({ inning: currentInning }),
     });
     if (res.ok) {
+      const data = await res.json();
+      setInningOuts(data.inningOuts ?? 0);
+      if (data.autoAdvanced) {
+        addToast(`Inning ${currentInning} complete! Moving to inning ${currentInning + 1}`, "info");
+        setCurrentInning((prev) => prev + 1);
+        setAssignments({});
+        // Reset inning outs for the new inning after a short delay
+        setTimeout(() => setInningOuts(0), 500);
+      } else {
+        addToast("Out recorded", "success");
+      }
+      // Reload full state
       await loadFielding();
-      addToast("Out recorded", "success");
     }
   }
 
   function nextInning() {
     setCurrentInning((prev) => prev + 1);
     setAssignments({});
+    setInningOuts(0);
+  }
+
+  function autoAssignPositions() {
+    const fieldPositions = FIELD_POSITIONS.filter((p) => p.value !== "BENCH");
+    const confirmedPlayers = players.filter((p) => confirmedPlayerIds.has(p.id));
+
+    if (confirmedPlayers.length === 0) {
+      addToast("No confirmed players to assign", "error");
+      return;
+    }
+
+    // Rotate based on inning so players get different positions each inning
+    const offset = ((currentInning - 1) * fieldPositions.length) % confirmedPlayers.length;
+    const newAssignments: Record<string, string> = {};
+
+    confirmedPlayers.forEach((_, index) => {
+      const playerIndex = (index + offset) % confirmedPlayers.length;
+      const player = confirmedPlayers[playerIndex];
+      if (index < fieldPositions.length) {
+        newAssignments[player.id] = fieldPositions[index].value;
+      } else {
+        newAssignments[player.id] = "BENCH";
+      }
+    });
+
+    // Non-confirmed players get BENCH
+    players.forEach((p) => {
+      if (!confirmedPlayerIds.has(p.id)) {
+        newAssignments[p.id] = "BENCH";
+      }
+    });
+
+    setAssignments(newAssignments);
+    addToast(`Positions auto-assigned for ${confirmedPlayers.length} confirmed players`, "info");
   }
 
   if (loading) return <div className="flex justify-center py-8"><Spinner /></div>;
@@ -392,33 +458,72 @@ function FieldingTab({
     return { ...p, totalOuts, positions, innings };
   });
 
+  // Sort: confirmed players first, then non-confirmed
+  const sortedPlayers = [...players].sort((a, b) => {
+    const aConfirmed = confirmedPlayerIds.has(a.id) ? 0 : 1;
+    const bConfirmed = confirmedPlayerIds.has(b.id) ? 0 : 1;
+    return aConfirmed - bConfirmed;
+  });
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between bg-secondary text-white rounded-lg px-4 py-3">
-        <span className="font-bold">Inning {currentInning}</span>
-        <div className="flex gap-2">
-          <Button size="sm" variant="ghost" className="text-white hover:bg-white/20" onClick={recordOut}>
-            Record Out
-          </Button>
-          <Button size="sm" variant="ghost" className="text-white hover:bg-white/20" onClick={nextInning}>
-            Next Inning
-          </Button>
+      {/* Inning header with out counter */}
+      <div className="bg-secondary text-white rounded-lg px-4 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <span className="font-bold">Inning {currentInning}</span>
+            <span className="ml-3 text-sm opacity-80">Outs: {inningOuts}/{outsPerInning}</span>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-white hover:bg-white/20"
+              onClick={recordOut}
+              disabled={inningOuts >= outsPerInning}
+            >
+              Record Out
+            </Button>
+            <Button size="sm" variant="ghost" className="text-white hover:bg-white/20" onClick={nextInning}>
+              Next Inning
+            </Button>
+          </div>
+        </div>
+        {/* Visual out indicator dots */}
+        <div className="flex justify-center gap-1.5">
+          {Array.from({ length: outsPerInning }).map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "w-3.5 h-3.5 rounded-full border-2 transition-colors",
+                i < inningOuts ? "bg-white border-white" : "border-white/40"
+              )}
+            />
+          ))}
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="font-semibold text-sm">Field Positions - Inning {currentInning}</span>
-            <Button size="sm" onClick={saveFielding}>Save Positions</Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={autoAssignPositions}>
+                <Wand2 className="h-3 w-3 mr-1" /> Auto-Assign
+              </Button>
+              <Button size="sm" onClick={saveFielding}>Save Positions</Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="divide-y divide-border max-h-[50vh] overflow-y-auto scrollbar-thin">
-          {players.map((player) => (
+          {sortedPlayers.map((player) => (
             <div key={player.id} className="flex items-center justify-between py-2.5">
               <span className="text-sm font-medium min-w-[120px]">
                 {player.jerseyNumber != null && `#${player.jerseyNumber} `}
                 {player.firstName} {player.lastName[0]}.
+                {!confirmedPlayerIds.has(player.id) && confirmedPlayerIds.size > 0 && (
+                  <span className="text-xs text-red-500 ml-1">(absent)</span>
+                )}
               </span>
               <select
                 value={assignments[player.id] || "BENCH"}

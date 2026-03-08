@@ -40,6 +40,14 @@ Add the ability to upload, organize, and share team photos.
 
 ## Completed
 
+### ~~RSVP + Game Day Enhancements~~ ✅
+
+**Completed:** March 2026
+
+Family-filtered RSVP page (phone lookup → show only your players), RSVP count badges on schedule, RSVP→Game Day attendance auto-sync, 6 outs per inning tracking with auto-advance, and auto-assign fielding positions for confirmed players with rotation.
+
+---
+
 ### ~~PWA (Progressive Web App)~~ ✅
 
 **Completed:** March 2026
