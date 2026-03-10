@@ -200,8 +200,11 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 ## 14. Home Page (Public)
 
-- [x] Team branding with Cheetah logo
+- [x] Team branding with SVG Cheetah logo (navy & amber)
+- [x] Hero section with gradient background
 - [x] 2x2 icon tile grid: View Schedule, Parent Registration, Volunteer Sign-Up, Coach Login
+- [x] Hover scale animations on tiles
+- [x] Decorative divider between heading and tiles
 - [x] Upcoming events section (next 5)
 - [x] Recent updates section (latest 3)
 - [x] Responsive layout for mobile and desktop
@@ -211,9 +214,12 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 ## 15. Navigation & Layout
 
 - [x] Unified top navigation bar for all pages
+- [x] SVG team logo in nav bar (replaces emoji)
+- [x] Nav bar shadow for visual depth
 - [x] Public tabs: Home, Schedule, Updates, Volunteer, Parent Registration
 - [x] Coach tabs (visible when logged in): Dashboard, Roster, Game Day, Coaching, Rules & AI, Settings
 - [x] Mobile hamburger menu (responsive below 1024px)
+- [x] Mobile menu slide-down animation with backdrop fade
 - [x] Auth-aware: shows Coach Login button or coach name + Sign Out
 - [x] Nav hidden on login, forgot password, and reset password pages
 
@@ -233,8 +239,9 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 - [x] Web App Manifest (`manifest.json`) with app name, icons, theme color, standalone display
 - [x] Service worker with network-first caching strategy
-- [x] Branded offline fallback page (Cheetah logo + retry button)
+- [x] Branded offline fallback page (SVG Cheetah logo + retry button + gradient bg)
 - [x] App icons: 192x192, 512x512 PNG + Apple Touch Icon (180x180) + Favicon
+- [x] Custom-generated icons with navy/amber cheetah design
 - [x] iOS support: `apple-mobile-web-app-capable`, status bar styling
 - [x] "Add to Home Screen" support on iOS and Android
 - [x] Full-screen standalone mode (hides browser URL bar)
@@ -242,7 +249,22 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 ---
 
-## 18. Infrastructure
+## 18. UX Polish & Visual Design
+
+- [x] **Micro-animations**: fade-in, slide-down, scale-in CSS keyframe animations
+- [x] **Button press feedback**: subtle scale-down (0.97) on active press
+- [x] **Card transitions**: smooth transition-all on all card components
+- [x] **Toast animations**: custom slide-in from right with spring easing
+- [x] **Loading skeletons**: shimmer animation placeholders on Schedule, Dashboard, Updates, Roster, Game Day
+- [x] **Team logo**: SVG React component (`TeamLogo`) with sm/md/lg/xl sizes, navy & amber design
+- [x] **Hero gradient**: `bg-hero-gradient` linear gradient on home page and offline page
+- [x] **Dashboard stat cards**: colored left border accents, icon background circles
+- [x] **Typography**: darker body text (#0f172a) for improved readability
+- [x] **Color system**: surface-hover token, consistent design tokens
+
+---
+
+## 19. Infrastructure
 
 - [x] Next.js 16 (App Router) with TypeScript
 - [x] Tailwind CSS v4 for styling

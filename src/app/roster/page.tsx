@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
+import { SkeletonPlayerCard } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatPhone } from "@/lib/utils";
 import type { PlayerWithFamily } from "@/types";
@@ -287,7 +287,11 @@ function RosterContent() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+        <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonPlayerCard key={i} />
+          ))}
+        </div>
       ) : players.length === 0 ? (
         <p className="text-muted text-sm">No players yet. Add your first player above.</p>
       ) : (

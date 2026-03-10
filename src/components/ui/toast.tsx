@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={toast.id}
             className={cn(
-              "flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm text-white min-w-[280px] animate-in slide-in-from-right",
+              "flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm text-white min-w-[280px] animate-toast-in",
               {
                 "bg-green-600": toast.type === "success",
                 "bg-red-600": toast.type === "error",

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
+import { SkeletonStatCard, SkeletonEventRow } from "@/components/ui/skeleton";
 import { formatDateTime } from "@/lib/utils";
 import { Calendar, Users, Megaphone, Gamepad2 } from "lucide-react";
 
@@ -45,15 +45,33 @@ export default function DashboardPage() {
       </h1>
 
       {loading ? (
-        <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+        <div className="space-y-6 animate-fade-in">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonStatCard key={i} />
+            ))}
+          </div>
+          <div className="bg-surface rounded-xl border border-border shadow-sm">
+            <div className="px-4 py-3 border-b border-border">
+              <div className="skeleton-shimmer h-5 w-36 rounded" />
+            </div>
+            <div className="px-4 py-3 space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonEventRow key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           {/* Quick stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             <Link href="/roster">
-              <Card className="hover:shadow-md transition-shadow">
+              <Card className="hover:shadow-md border-l-4 border-l-primary">
                 <CardContent className="flex items-center gap-2 sm:gap-3 p-3 sm:py-4">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 shrink-0 text-primary" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
                   <div className="min-w-0">
                     <div className="text-xl sm:text-2xl font-bold">{stats?.players ?? 0}</div>
                     <div className="text-xs text-muted">Players</div>
@@ -62,9 +80,11 @@ export default function DashboardPage() {
               </Card>
             </Link>
             <Link href="/schedule">
-              <Card className="hover:shadow-md transition-shadow">
+              <Card className="hover:shadow-md border-l-4 border-l-blue-500">
                 <CardContent className="flex items-center gap-2 sm:gap-3 p-3 sm:py-4">
-                  <Calendar className="h-6 w-6 sm:h-8 sm:w-8 shrink-0 text-blue-500" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                  </div>
                   <div className="min-w-0">
                     <div className="text-xl sm:text-2xl font-bold">{stats?.upcomingEvents.length ?? 0}</div>
                     <div className="text-xs text-muted">Upcoming</div>
@@ -73,9 +93,11 @@ export default function DashboardPage() {
               </Card>
             </Link>
             <Link href="/updates">
-              <Card className="hover:shadow-md transition-shadow">
+              <Card className="hover:shadow-md border-l-4 border-l-green-500">
                 <CardContent className="flex items-center gap-2 sm:gap-3 p-3 sm:py-4">
-                  <Megaphone className="h-6 w-6 sm:h-8 sm:w-8 shrink-0 text-green-500" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                    <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                  </div>
                   <div className="min-w-0">
                     <div className="text-xl sm:text-2xl font-bold">{stats?.recentUpdates.length ?? 0}</div>
                     <div className="text-xs text-muted">Updates</div>
@@ -84,9 +106,11 @@ export default function DashboardPage() {
               </Card>
             </Link>
             <Link href="/gameday">
-              <Card className="hover:shadow-md transition-shadow">
+              <Card className="hover:shadow-md border-l-4 border-l-primary">
                 <CardContent className="flex items-center gap-2 sm:gap-3 p-3 sm:py-4">
-                  <Gamepad2 className="h-6 w-6 sm:h-8 sm:w-8 shrink-0 text-primary" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Gamepad2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
                   <div className="min-w-0">
                     <div className="text-xl sm:text-2xl font-bold">Go</div>
                     <div className="text-xs text-muted">Game Day</div>

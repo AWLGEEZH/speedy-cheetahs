@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Calendar, UserPlus, HandHelping, LogIn } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/utils";
+import { TeamLogo } from "@/components/ui/team-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -38,36 +39,39 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <div className="bg-secondary text-white">
-        <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-          <div className="text-6xl mb-4">&#x1F406;</div>
-          <h1 className="text-4xl font-bold mb-2">Speedy Cheetahs</h1>
-          <p className="text-white/80 text-lg">Farm-1 Coach Pitch Baseball</p>
-          <div className="mt-8 grid grid-cols-2 gap-4 max-w-lg mx-auto">
+      <div className="bg-hero-gradient text-white">
+        <div className="max-w-4xl mx-auto px-4 py-14 text-center">
+          <div className="flex justify-center mb-4">
+            <TeamLogo size="xl" />
+          </div>
+          <h1 className="text-4xl font-bold mb-2 tracking-tight">Speedy Cheetahs</h1>
+          <p className="text-white/70 text-lg">Farm-1 Coach Pitch Baseball</p>
+          <div className="w-12 h-0.5 bg-primary mx-auto mt-4 mb-8 rounded-full" />
+          <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
             <Link
               href="/schedule"
-              className="flex flex-col items-center gap-2 px-4 py-5 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors text-center"
+              className="flex flex-col items-center gap-2 px-4 py-5 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark hover:scale-[1.03] transition-all duration-200 text-center shadow-lg shadow-primary/20"
             >
               <Calendar className="h-6 w-6" />
               <span className="text-sm">View Schedule</span>
             </Link>
             <Link
               href="/register"
-              className="flex flex-col items-center gap-2 px-4 py-5 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors text-center"
+              className="flex flex-col items-center gap-2 px-4 py-5 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark hover:scale-[1.03] transition-all duration-200 text-center shadow-lg shadow-primary/20"
             >
               <UserPlus className="h-6 w-6" />
               <span className="text-sm">Parent Registration</span>
             </Link>
             <Link
               href="/volunteer"
-              className="flex flex-col items-center gap-2 px-4 py-5 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-colors text-center"
+              className="flex flex-col items-center gap-2 px-4 py-5 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 hover:scale-[1.03] transition-all duration-200 text-center backdrop-blur-sm"
             >
               <HandHelping className="h-6 w-6" />
               <span className="text-sm">Volunteer Sign-Up</span>
             </Link>
             <Link
               href="/login"
-              className="flex flex-col items-center gap-2 px-4 py-5 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-colors text-center"
+              className="flex flex-col items-center gap-2 px-4 py-5 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 hover:scale-[1.03] transition-all duration-200 text-center backdrop-blur-sm"
             >
               <LogIn className="h-6 w-6" />
               <span className="text-sm">Coach Login</span>

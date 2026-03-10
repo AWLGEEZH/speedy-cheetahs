@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
+import { SkeletonEventRow } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatDateTime } from "@/lib/utils";
 import { EVENT_TYPES } from "@/lib/constants";
@@ -161,7 +161,11 @@ function ScheduleContent() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+        <div className="space-y-3 animate-fade-in">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonEventRow key={i} />
+          ))}
+        </div>
       ) : events.length === 0 ? (
         <p className="text-muted text-sm text-center py-8">No upcoming events scheduled.</p>
       ) : (

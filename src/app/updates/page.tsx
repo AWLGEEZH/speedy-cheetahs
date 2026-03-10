@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatDateTime } from "@/lib/utils";
 import type { UpdateWithCoach } from "@/types";
@@ -171,7 +171,11 @@ function UpdatesContent() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+        <div className="space-y-3 animate-fade-in">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : updates.length === 0 ? (
         <p className="text-muted text-sm text-center py-8">No updates yet.</p>
       ) : (

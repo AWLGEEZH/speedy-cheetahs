@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton, SkeletonPlayerCard } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { usePolling } from "@/hooks/use-polling";
 import { cn, formatDateTime } from "@/lib/utils";
@@ -57,8 +58,26 @@ function GameDayContent() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+      <div className="max-w-3xl mx-auto px-4 py-6 animate-fade-in">
+        <div className="mb-6 space-y-2">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex-1 py-3 flex justify-center">
+              <Skeleton className="h-4 w-20" />
+            </div>
+          ))}
+        </div>
+        <div className="bg-surface rounded-xl border border-border shadow-sm p-4 space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-2.5">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-7 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -231,7 +250,15 @@ function BattingTab({
     }
   }
 
-  if (loading) return <div className="flex justify-center py-8"><Spinner /></div>;
+  if (loading) return (
+    <div className="space-y-3 animate-fade-in">
+      <div className="bg-surface rounded-xl border border-border shadow-sm p-5 text-center">
+        <Skeleton className="h-4 w-24 mx-auto mb-2" />
+        <Skeleton className="h-8 w-48 mx-auto mb-2" />
+        <Skeleton className="h-3 w-32 mx-auto" />
+      </div>
+    </div>
+  );
 
   if (!initialized) {
     return (
@@ -448,7 +475,19 @@ function FieldingTab({
     addToast(`Positions auto-assigned for ${confirmedPlayers.length} confirmed players`, "info");
   }
 
-  if (loading) return <div className="flex justify-center py-8"><Spinner /></div>;
+  if (loading) return (
+    <div className="space-y-4 animate-fade-in">
+      <Skeleton className="h-16 w-full rounded-lg" />
+      <div className="bg-surface rounded-xl border border-border shadow-sm p-4 space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center justify-between py-2.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-7 w-24 rounded" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const playerStats = players.map((p) => {
     const entries = fieldingEntries.filter((e) => e.playerId === p.id);

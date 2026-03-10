@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { TeamLogo } from "@/components/ui/team-logo";
 
 const publicTabs = [
   { href: "/", label: "Home", icon: null, exact: true },
@@ -66,12 +67,12 @@ export function UnifiedLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top nav bar */}
-      <header className="bg-secondary text-white sticky top-0 z-50">
+      <header className="bg-secondary text-white sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <span className="text-2xl">&#x1F406;</span>
+              <TeamLogo size="sm" />
               <div className="hidden sm:block">
                 <div className="font-bold text-sm leading-tight">Speedy Cheetahs</div>
                 <div className="text-[10px] text-white/60 leading-tight">Farm-1 Baseball</div>
@@ -156,10 +157,10 @@ export function UnifiedLayout({ children }: { children: React.ReactNode }) {
       {mobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-fade-in"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed top-14 left-0 right-0 bg-secondary text-white z-40 lg:hidden border-t border-white/10 max-h-[calc(100vh-56px)] overflow-y-auto">
+          <div className="fixed top-14 left-0 right-0 bg-secondary text-white z-40 lg:hidden border-t border-white/10 max-h-[calc(100vh-56px)] overflow-y-auto animate-slide-down">
             <nav className="py-2">
               <div className="px-4 py-1.5">
                 <p className="text-[10px] text-white/40 uppercase tracking-wider font-medium">Team</p>

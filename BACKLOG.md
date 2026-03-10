@@ -36,72 +36,7 @@ Add the ability to upload, organize, and share team photos.
 
 ---
 
-### 2. Micro-Animations & Transitions
-
-**Priority:** High
-**Effort:** ~1-2 hours
-
-Add smooth transitions and animations throughout the app to make interactions feel polished and responsive.
-
-**Scope:**
-- CSS transitions on card expand/collapse (roster, schedule forms)
-- Tab switching animations (Game Day tabs, nav)
-- Toast notification slide-in/fade-out
-- Button press feedback (subtle scale)
-- Page transition effects
-- Framer Motion or CSS-only approach
-
----
-
-### 3. Color Palette & Typography Refresh
-
-**Priority:** High
-**Effort:** ~1-2 hours
-
-Elevate visual design with a refined color system and better font hierarchy.
-
-**Scope:**
-- Warm accent color (gold/amber) for Cheetahs brand alongside navy
-- Improved font sizing hierarchy (headings, body, captions)
-- More whitespace and breathing room in layouts
-- Consistent color tokens across components
-- Better contrast and readability on mobile
-
----
-
-### 4. Team Logo & Branding
-
-**Priority:** High
-**Effort:** ~1-2 hours
-
-Replace emoji cheetah with a real team logo throughout the app.
-
-**Scope:**
-- AI-generated or custom Cheetahs logo
-- Update nav bar, home page, PWA icons, and favicon
-- Branded loading/splash screen
-- Consistent brand presence across all pages
-
----
-
-### 5. Loading Skeletons
-
-**Priority:** High
-**Effort:** ~1-2 hours
-
-Replace circular spinners with skeleton placeholder animations that match content shapes.
-
-**Scope:**
-- Skeleton components for cards, lists, tables
-- Schedule page skeleton (event cards)
-- Roster page skeleton (player cards)
-- Game Day skeleton (attendance list, batting lineup)
-- Updates page skeleton
-- Pulse animation matching modern app patterns (Instagram, YouTube style)
-
----
-
-### 6. Dashboard Visual Upgrade
+### 2. Dashboard Visual Upgrade
 
 **Priority:** Medium
 **Effort:** ~2-4 hours
@@ -117,7 +52,7 @@ Redesign dashboard with better visual hierarchy, gradient cards, and data visual
 
 ---
 
-### 7. Pull-to-Refresh on Mobile
+### 3. Pull-to-Refresh on Mobile
 
 **Priority:** Medium
 **Effort:** ~2-4 hours
@@ -133,7 +68,7 @@ Add native-feeling pull-to-refresh on key PWA pages.
 
 ---
 
-### 8. Dark Mode
+### 4. Dark Mode
 
 **Priority:** Medium
 **Effort:** ~2-4 hours
@@ -150,7 +85,7 @@ Add a dark mode toggle with full theme support across all pages.
 
 ---
 
-### 9. Haptic-Style Feedback & Celebrations
+### 5. Haptic-Style Feedback & Celebrations
 
 **Priority:** Medium
 **Effort:** ~2-4 hours
@@ -166,7 +101,7 @@ Add delightful micro-interactions and visual feedback throughout the app.
 
 ---
 
-### 10. Real-Time Updates via Server-Sent Events
+### 6. Real-Time Updates via Server-Sent Events
 
 **Priority:** Low
 **Effort:** ~3-4 hours
@@ -182,7 +117,7 @@ Replace 10-second polling with Server-Sent Events for instant live updates durin
 
 ---
 
-### 11. Parent Onboarding Flow
+### 7. Parent Onboarding Flow
 
 **Priority:** Low
 **Effort:** ~3-4 hours
@@ -202,6 +137,14 @@ Guided walkthrough for new parents visiting the portal for the first time.
 ---
 
 ## Completed
+
+### ~~UX Polish Bundle (Animations, Colors, Logo, Skeletons)~~ ✅
+
+**Completed:** March 2026
+
+Micro-animations (fade-in, slide-down, scale-in), button press feedback, toast slide-in animation, hero gradient on home/offline pages, dashboard stat card accents with icon circles, darker body text, SVG team logo component replacing emoji across nav/home/offline, regenerated PWA icons, and shimmer skeleton loading on Schedule, Dashboard, Updates, Roster, and Game Day pages.
+
+---
 
 ### ~~RSVP + Game Day Enhancements~~ ✅
 
