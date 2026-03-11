@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { VOLUNTEER_ROLE_TEMPLATES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
-import { X, Users, HandHelping, UserPlus } from "lucide-react";
+import { X, Users, HandHelping, UserPlus, Trash2 } from "lucide-react";
 
 interface VolunteerRole {
   id: string;
@@ -23,12 +23,48 @@ interface VolunteerRole {
   signups: { id: string; family: { id: string; parentName: string } }[];
 }
 
+interface EventInfo {
+  id: string;
+  title: string;
+  date: string;
+  type: string;
+}
+
 const STORAGE_KEY = "speedy-cheetahs-volunteer";
+
+/**
+ * Build a map of event ID → numbered label like "Practice 1", "Preseason Game 2", "Game 3".
+ * Events must be sorted by date (ascending) before calling.
+ */
+function buildEventLabels(events: EventInfo[]): Map<string, string> {
+  const labels = new Map<string, string>();
+  let practiceNum = 0;
+  let preseasonNum = 0;
+  let gameNum = 0;
+
+  // Events from the API are already sorted by date ascending
+  for (const evt of events) {
+    if (evt.type === "PRACTICE") {
+      practiceNum++;
+      labels.set(evt.id, `Practice ${practiceNum}`);
+    } else if (evt.type === "GAME" && evt.title.toLowerCase().includes("preseason")) {
+      preseasonNum++;
+      labels.set(evt.id, `Preseason Game ${preseasonNum}`);
+    } else if (evt.type === "GAME") {
+      gameNum++;
+      labels.set(evt.id, `Game ${gameNum}`);
+    } else {
+      labels.set(evt.id, evt.title);
+    }
+  }
+
+  return labels;
+}
 
 function VolunteerContent() {
   const { isCoach } = useAuth();
   const [roles, setRoles] = useState<VolunteerRole[]>([]);
-  const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
+  const [events, setEvents] = useState<EventInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Coach: add role form
@@ -42,6 +78,9 @@ function VolunteerContent() {
   const [familyPhone, setFamilyPhone] = useState("");
 
   const { addToast } = useToast();
+
+  // Build numbered labels from events list
+  const eventLabels = useMemo(() => buildEventLabels(events), [events]);
 
   // Load saved volunteer info from localStorage
   useEffect(() => {
@@ -88,6 +127,18 @@ function VolunteerContent() {
     }
   }
 
+  // Coach: delete role
+  async function handleDeleteRole(roleId: string, roleName: string) {
+    if (!confirm(`Delete the "${roleName}" role? Any existing signups will also be removed.`)) return;
+    const res = await fetch(`/api/volunteer/roles/${roleId}`, { method: "DELETE" });
+    if (res.ok) {
+      await load();
+      addToast("Role deleted", "success");
+    } else {
+      addToast("Failed to delete role", "error");
+    }
+  }
+
   // Parent: sign up for a role
   function handleTapRole(roleId: string) {
     setSigningUp(signingUp === roleId ? null : roleId);
@@ -129,9 +180,10 @@ function VolunteerContent() {
     }
   }
 
-  // Group roles by event
+  // Group roles by event, using numbered label as the display key
   const grouped = roles.reduce<Record<string, VolunteerRole[]>>((acc, role) => {
-    const key = `${role.event.title}|||${role.event.date}`;
+    const label = eventLabels.get(role.eventId) || role.event.title;
+    const key = `${label}|||${role.event.date}`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(role);
     return acc;
@@ -164,7 +216,10 @@ function VolunteerContent() {
             <form onSubmit={handleCreateRole} className="space-y-3">
               <Select
                 label="Event"
-                options={events.map((e) => ({ value: e.id, label: e.title }))}
+                options={events.map((e) => ({
+                  value: e.id,
+                  label: `${eventLabels.get(e.id) || e.title} — ${formatDate(e.date)}`,
+                }))}
                 value={form.eventId}
                 onChange={(e) => setForm({ ...form, eventId: e.target.value })}
                 placeholder="Select event..."
@@ -208,11 +263,11 @@ function VolunteerContent() {
       ) : (
         <div className="space-y-4">
           {Object.entries(grouped).map(([key, eventRoles]) => {
-            const [title, dateStr] = key.split("|||");
+            const [label, dateStr] = key.split("|||");
             return (
               <div key={key} className="bg-surface border border-border rounded-lg overflow-hidden">
                 <div className="bg-gray-50 px-4 py-2 border-b border-border">
-                  <span className="font-semibold text-sm">{title}</span>
+                  <span className="font-semibold text-sm">{label}</span>
                   <span className="text-xs text-muted ml-2">{formatDate(dateStr)}</span>
                 </div>
                 <div className="divide-y divide-border">
@@ -223,35 +278,53 @@ function VolunteerContent() {
                     return (
                       <div key={role.id}>
                         {/* Role row */}
-                        <button
-                          type="button"
-                          onClick={() => !isFull && !isCoach && handleTapRole(role.id)}
-                          disabled={isFull || isCoach}
+                        <div
                           className={`w-full text-left px-4 py-3 transition-colors ${
                             isFull
-                              ? "opacity-70 cursor-default"
+                              ? "opacity-70"
                               : isCoach
-                                ? "cursor-default"
+                                ? ""
                                 : isExpanded
                                   ? "bg-primary/5"
-                                  : "hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+                                  : "hover:bg-gray-50 active:bg-gray-100"
                           }`}
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">{role.name}</span>
-                                {!isFull && !isExpanded && !isCoach && (
-                                  <UserPlus className="h-3.5 w-3.5 text-primary" />
-                                )}
+                          <div className="flex items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => !isFull && !isCoach && handleTapRole(role.id)}
+                              disabled={isFull || isCoach}
+                              className={`flex-1 min-w-0 text-left ${
+                                !isFull && !isCoach ? "cursor-pointer" : "cursor-default"
+                              }`}
+                            >
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">{role.name}</span>
+                                    {!isFull && !isExpanded && !isCoach && (
+                                      <UserPlus className="h-3.5 w-3.5 text-primary" />
+                                    )}
+                                  </div>
+                                  {role.description && (
+                                    <p className="text-xs text-muted">{role.description}</p>
+                                  )}
+                                </div>
+                                <Badge variant={isFull ? "success" : "warning"}>
+                                  {role.signups.length}/{role.slotsNeeded} filled
+                                </Badge>
                               </div>
-                              {role.description && (
-                                <p className="text-xs text-muted">{role.description}</p>
-                              )}
-                            </div>
-                            <Badge variant={isFull ? "success" : "warning"}>
-                              {role.signups.length}/{role.slotsNeeded} filled
-                            </Badge>
+                            </button>
+                            {isCoach && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteRole(role.id, role.name)}
+                                className="p-1.5 hover:bg-gray-100 rounded shrink-0"
+                                title="Delete role"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 text-muted" />
+                              </button>
+                            )}
                           </div>
                           {role.signups.length > 0 && (
                             <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -265,7 +338,7 @@ function VolunteerContent() {
                               ))}
                             </div>
                           )}
-                        </button>
+                        </div>
 
                         {/* Inline sign-up form (parents only) */}
                         {isExpanded && !isCoach && (
