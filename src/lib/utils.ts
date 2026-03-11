@@ -18,6 +18,21 @@ export function formatDateTime(date: Date | string): string {
   return format(new Date(date), "EEE, MMM d 'at' h:mm a");
 }
 
+export function formatDateTimeRange(
+  start: Date | string,
+  end?: Date | string | null,
+): string {
+  const startDate = new Date(start);
+  if (!end) return format(startDate, "EEE, MMM d 'at' h:mm a");
+  const endDate = new Date(end);
+  // Same calendar day → "Sat, Mar 14 · 3:00 PM – 5:00 PM"
+  if (startDate.toDateString() === endDate.toDateString()) {
+    return `${format(startDate, "EEE, MMM d")} · ${format(startDate, "h:mm a")} – ${format(endDate, "h:mm a")}`;
+  }
+  // Different days (edge case)
+  return `${format(startDate, "EEE, MMM d 'at' h:mm a")} – ${format(endDate, "EEE, MMM d 'at' h:mm a")}`;
+}
+
 export function formatRelative(date: Date | string): string {
   return formatDistanceToNow(new Date(date), { addSuffix: true });
 }

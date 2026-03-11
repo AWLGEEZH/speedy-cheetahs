@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonEventRow } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTimeRange } from "@/lib/utils";
 import { EVENT_TYPES } from "@/lib/constants";
 import Link from "next/link";
 import { X, MapPin, Edit2, Trash2, Users } from "lucide-react";
@@ -191,7 +191,7 @@ function ScheduleContent() {
                     </Badge>
                     {event.isCancelled && <Badge variant="danger">Cancelled</Badge>}
                   </div>
-                  <p className="text-sm text-muted">{formatDateTime(event.date)}</p>
+                  <p className="text-sm text-muted">{formatDateTimeRange(event.date, event.endTime)}</p>
                   <p className="text-sm text-muted flex items-center gap-1 mt-1">
                     <MapPin className="h-3 w-3" /> {event.locationName}
                     {event.locationAddress && ` - ${event.locationAddress}`}
