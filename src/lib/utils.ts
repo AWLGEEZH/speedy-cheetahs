@@ -6,25 +6,37 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const TEAM_TIMEZONE = "America/Los_Angeles";
+
+/**
+ * Convert a Date to one whose local-time methods return Pacific time values.
+ * This ensures date-fns format() produces Pacific-timezone output regardless
+ * of whether code runs on a UTC server or a PDT/PST client.
+ */
+function toPacific(date: Date): Date {
+  const pacific = date.toLocaleString("en-US", { timeZone: TEAM_TIMEZONE });
+  return new Date(pacific);
+}
+
 export function formatDate(date: Date | string): string {
-  return format(new Date(date), "EEE, MMM d");
+  return format(toPacific(new Date(date)), "EEE, MMM d");
 }
 
 export function formatTime(date: Date | string): string {
-  return format(new Date(date), "h:mm a");
+  return format(toPacific(new Date(date)), "h:mm a");
 }
 
 export function formatDateTime(date: Date | string): string {
-  return format(new Date(date), "EEE, MMM d 'at' h:mm a");
+  return format(toPacific(new Date(date)), "EEE, MMM d 'at' h:mm a");
 }
 
 export function formatDateTimeRange(
   start: Date | string,
   end?: Date | string | null,
 ): string {
-  const startDate = new Date(start);
+  const startDate = toPacific(new Date(start));
   if (!end) return format(startDate, "EEE, MMM d 'at' h:mm a");
-  const endDate = new Date(end);
+  const endDate = toPacific(new Date(end));
   // Same calendar day → "Sat, Mar 14 · 3:00 PM – 5:00 PM"
   if (startDate.toDateString() === endDate.toDateString()) {
     return `${format(startDate, "EEE, MMM d")} · ${format(startDate, "h:mm a")} – ${format(endDate, "h:mm a")}`;
