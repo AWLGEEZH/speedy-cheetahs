@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { VOLUNTEER_ROLE_TEMPLATES } from "@/lib/constants";
-import { formatDate } from "@/lib/utils";
+import { formatDate, buildEventLabels } from "@/lib/utils";
 import { X, Users, HandHelping, UserPlus, Trash2 } from "lucide-react";
 
 interface VolunteerRole {
@@ -31,35 +31,6 @@ interface EventInfo {
 }
 
 const STORAGE_KEY = "speedy-cheetahs-volunteer";
-
-/**
- * Build a map of event ID → numbered label like "Practice 1", "Preseason Game 2", "Game 3".
- * Events must be sorted by date (ascending) before calling.
- */
-function buildEventLabels(events: EventInfo[]): Map<string, string> {
-  const labels = new Map<string, string>();
-  let practiceNum = 0;
-  let preseasonNum = 0;
-  let gameNum = 0;
-
-  // Events from the API are already sorted by date ascending
-  for (const evt of events) {
-    if (evt.type === "PRACTICE") {
-      practiceNum++;
-      labels.set(evt.id, `Practice ${practiceNum}`);
-    } else if (evt.type === "GAME" && evt.title.toLowerCase().includes("preseason")) {
-      preseasonNum++;
-      labels.set(evt.id, `Preseason Game ${preseasonNum}`);
-    } else if (evt.type === "GAME") {
-      gameNum++;
-      labels.set(evt.id, `Game ${gameNum}`);
-    } else {
-      labels.set(evt.id, evt.title);
-    }
-  }
-
-  return labels;
-}
 
 function VolunteerContent() {
   const { isCoach } = useAuth();

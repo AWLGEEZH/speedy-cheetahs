@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonEventRow } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { formatDateTimeRange } from "@/lib/utils";
+import { formatDateTimeRange, buildEventLabels } from "@/lib/utils";
 import { EVENT_TYPES } from "@/lib/constants";
 import Link from "next/link";
 import { X, MapPin, Edit2, Trash2, Users, Check, XCircle } from "lucide-react";
@@ -54,6 +54,7 @@ function ScheduleContent() {
     notes: "",
   });
   const { addToast } = useToast();
+  const eventLabels = useMemo(() => buildEventLabels(events), [events]);
 
   async function load() {
     try {
@@ -233,7 +234,7 @@ function ScheduleContent() {
                       />
                       <span className="font-medium text-sm">{event.title}</span>
                       <Badge variant={event.type === "GAME" ? "warning" : event.type === "PRACTICE" ? "info" : "default"}>
-                        {event.type}
+                        {eventLabels.get(event.id) ?? event.type}
                       </Badge>
                       {event.isCancelled && <Badge variant="danger">Cancelled</Badge>}
                     </div>

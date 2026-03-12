@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { Calendar, UserPlus, HandHelping, LogIn } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, buildEventLabels } from "@/lib/utils";
 import { TeamLogo } from "@/components/ui/team-logo";
 
 export const dynamic = "force-dynamic";
 
-async function getUpcomingEvents() {
+async function getAllEvents() {
   try {
     return await prisma.event.findMany({
-      where: { date: { gte: new Date() }, isCancelled: false },
+      where: { isCancelled: false },
       orderBy: { date: "asc" },
-      take: 5,
+      select: { id: true, title: true, type: true, date: true, locationName: true },
     });
   } catch {
     return [];
@@ -31,10 +31,15 @@ async function getRecentUpdates() {
 }
 
 export default async function HomePage() {
-  const [events, updates] = await Promise.all([
-    getUpcomingEvents(),
+  const [allEvents, updates] = await Promise.all([
+    getAllEvents(),
     getRecentUpdates(),
   ]);
+
+  // Compute numbered labels from ALL events, then filter to upcoming 5 for display
+  const eventLabels = buildEventLabels(allEvents);
+  const now = new Date();
+  const events = allEvents.filter((e) => new Date(e.date) >= now).slice(0, 5);
 
   return (
     <div className="min-h-screen">
@@ -114,8 +119,8 @@ export default async function HomePage() {
                       {event.locationName}
                     </p>
                   </div>
-                  <span className="text-xs text-muted uppercase font-medium">
-                    {event.type}
+                  <span className="text-xs text-muted font-medium whitespace-nowrap">
+                    {eventLabels.get(event.id) ?? event.type}
                   </span>
                 </div>
               ))}

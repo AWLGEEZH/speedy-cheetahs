@@ -49,6 +49,39 @@ export function formatRelative(date: Date | string): string {
   return formatDistanceToNow(new Date(date), { addSuffix: true });
 }
 
+/**
+ * Build a map of event ID → numbered label like "Practice #1", "Preseason Game #2", "Game #3".
+ * Events must be sorted by date (ascending) before calling.
+ */
+export function buildEventLabels(
+  events: { id: string; title: string; type: string }[],
+): Map<string, string> {
+  const labels = new Map<string, string>();
+  let practiceNum = 0;
+  let preseasonNum = 0;
+  let gameNum = 0;
+
+  for (const evt of events) {
+    if (evt.type === "PRACTICE") {
+      practiceNum++;
+      labels.set(evt.id, `Practice #${practiceNum}`);
+    } else if (
+      evt.type === "GAME" &&
+      evt.title.toLowerCase().includes("preseason")
+    ) {
+      preseasonNum++;
+      labels.set(evt.id, `Preseason Game #${preseasonNum}`);
+    } else if (evt.type === "GAME") {
+      gameNum++;
+      labels.set(evt.id, `Game #${gameNum}`);
+    } else {
+      labels.set(evt.id, evt.title);
+    }
+  }
+
+  return labels;
+}
+
 export function formatPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   if (digits.length === 11 && digits.startsWith("1")) {
