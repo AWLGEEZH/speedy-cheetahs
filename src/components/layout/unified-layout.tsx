@@ -13,6 +13,7 @@ import {
   Users,
   Gamepad2,
   Lightbulb,
+  MessageCircle,
   BookOpen,
   Settings,
   LogIn,
@@ -36,6 +37,7 @@ const coachTabs = [
   { href: "/roster", label: "Roster", icon: Users },
   { href: "/gameday", label: "Game Day", icon: Gamepad2 },
   { href: "/coaching", label: "Coaching", icon: Lightbulb },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
   { href: "/rules", label: "Rules & AI", icon: BookOpen },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

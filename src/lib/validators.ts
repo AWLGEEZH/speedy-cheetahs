@@ -186,3 +186,11 @@ export const createKBUrlSchema = z.object({
   type: z.literal("URL"),
   sourceUrl: z.string().url().max(2000),
 });
+
+export const coachRsvpSchema = z.object({
+  status: z.enum(["GOING", "NOT_GOING"]),
+});
+
+export const chatMessageSchema = z.object({
+  content: z.string().min(1).max(2000),
+});

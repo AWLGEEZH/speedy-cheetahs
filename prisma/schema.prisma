@@ -22,6 +22,8 @@ model Coach {
   updates          Update[]
   coachingSessions CoachingSession[]
   knowledgeBase    KnowledgeBase[]
+  coachRsvps       CoachRsvp[]
+  chatMessages     ChatMessage[]
 }
 
 enum CoachRole {
@@ -110,6 +112,7 @@ model Event {
   updates         Update[]
   gameState       GameState?
   attendanceRsvps AttendanceRsvp[]
+  coachRsvps      CoachRsvp[]
 }
 
 enum EventType {
@@ -304,4 +307,39 @@ model KnowledgeBase {
   coach Coach @relation(fields: [coachId], references: [id], onDelete: Cascade)
 
   @@index([coachId])
+}
+
+// ─── COACH RSVP ──────────────────────────────────────
+
+model CoachRsvp {
+  id        String          @id @default(cuid())
+  eventId   String
+  coachId   String
+  status    CoachRsvpStatus @default(GOING)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  coach Coach @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, coachId])
+  @@index([eventId])
+}
+
+enum CoachRsvpStatus {
+  GOING
+  NOT_GOING
+}
+
+// ─── COACHES CHAT ─────────────────────────────────────
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  coachId   String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  coach Coach @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
 }

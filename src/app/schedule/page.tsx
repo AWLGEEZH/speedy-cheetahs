@@ -13,7 +13,13 @@ import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatDateTimeRange } from "@/lib/utils";
 import { EVENT_TYPES } from "@/lib/constants";
 import Link from "next/link";
-import { X, MapPin, Edit2, Trash2, Users } from "lucide-react";
+import { X, MapPin, Edit2, Trash2, Users, Check, XCircle } from "lucide-react";
+
+interface CoachRsvpData {
+  id: string;
+  status: string;
+  coach: { id: string; name: string };
+}
 
 interface Event {
   id: string;
@@ -27,14 +33,16 @@ interface Event {
   notes: string | null;
   isCancelled: boolean;
   _count?: { attendanceRsvps: number };
+  coachRsvps?: CoachRsvpData[];
 }
 
 function ScheduleContent() {
-  const { isCoach } = useAuth();
+  const { isCoach, coach } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [rsvpLoading, setRsvpLoading] = useState<string | null>(null);
   const [form, setForm] = useState({
     type: "PRACTICE",
     title: "",
@@ -110,6 +118,39 @@ function ScheduleContent() {
     addToast("Event deleted", "success");
   }
 
+  async function handleCoachRsvp(eventId: string, status: "GOING" | "NOT_GOING") {
+    setRsvpLoading(eventId);
+    try {
+      const res = await fetch(`/api/events/${eventId}/coach-rsvp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        const updatedRsvp: CoachRsvpData = await res.json();
+        // Update local state optimistically
+        setEvents((prev) =>
+          prev.map((evt) => {
+            if (evt.id !== eventId) return evt;
+            const rsvps = evt.coachRsvps || [];
+            const existing = rsvps.findIndex((r) => r.coach.id === updatedRsvp.coach.id);
+            const newRsvps = existing >= 0
+              ? rsvps.map((r, i) => (i === existing ? updatedRsvp : r))
+              : [...rsvps, updatedRsvp];
+            return { ...evt, coachRsvps: newRsvps };
+          })
+        );
+      }
+    } catch { /* ignore */ }
+    setRsvpLoading(null);
+  }
+
+  function getMyRsvpStatus(event: Event): string | null {
+    if (!coach || !event.coachRsvps) return null;
+    const mine = event.coachRsvps.find((r) => r.coach.id === coach.id);
+    return mine?.status ?? null;
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-4">
@@ -170,62 +211,121 @@ function ScheduleContent() {
         <p className="text-muted text-sm text-center py-8">No upcoming events scheduled.</p>
       ) : (
         <div className="space-y-3">
-          {events.map((event) => (
-            <div
-              key={event.id}
-              className={`bg-surface border border-border rounded-lg p-4 ${
-                event.isCancelled ? "opacity-50" : ""
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span
-                      className={`inline-block w-2 h-2 rounded-full ${
-                        event.type === "GAME" ? "bg-primary" : "bg-blue-500"
-                      }`}
-                    />
-                    <span className="font-medium text-sm">{event.title}</span>
-                    <Badge variant={event.type === "GAME" ? "warning" : event.type === "PRACTICE" ? "info" : "default"}>
-                      {event.type}
-                    </Badge>
-                    {event.isCancelled && <Badge variant="danger">Cancelled</Badge>}
-                  </div>
-                  <p className="text-sm text-muted">{formatDateTimeRange(event.date, event.endTime)}</p>
-                  <p className="text-sm text-muted flex items-center gap-1 mt-1">
-                    <MapPin className="h-3 w-3" /> {event.locationName}
-                    {event.locationAddress && ` - ${event.locationAddress}`}
-                  </p>
-                  {event.notes && (
-                    <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
-                      {event.notes}
-                    </p>
-                  )}
-                  {event.type === "GAME" && !event.isCancelled && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="success">
-                        <Users className="h-3 w-3 mr-1 inline" />
-                        {event._count?.attendanceRsvps ?? 0} confirmed
+          {events.map((event) => {
+            const myStatus = getMyRsvpStatus(event);
+            const goingCoaches = (event.coachRsvps || []).filter((r) => r.status === "GOING");
+            const notGoingCoaches = (event.coachRsvps || []).filter((r) => r.status === "NOT_GOING");
+
+            return (
+              <div
+                key={event.id}
+                className={`bg-surface border border-border rounded-lg p-4 ${
+                  event.isCancelled ? "opacity-50" : ""
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full ${
+                          event.type === "GAME" ? "bg-primary" : "bg-blue-500"
+                        }`}
+                      />
+                      <span className="font-medium text-sm">{event.title}</span>
+                      <Badge variant={event.type === "GAME" ? "warning" : event.type === "PRACTICE" ? "info" : "default"}>
+                        {event.type}
                       </Badge>
-                      <Link href={`/rsvp/${event.id}`}>
-                        <Button size="sm" variant="outline">RSVP</Button>
-                      </Link>
+                      {event.isCancelled && <Badge variant="danger">Cancelled</Badge>}
+                    </div>
+                    <p className="text-sm text-muted">{formatDateTimeRange(event.date, event.endTime)}</p>
+                    <p className="text-sm text-muted flex items-center gap-1 mt-1">
+                      <MapPin className="h-3 w-3" /> {event.locationName}
+                      {event.locationAddress && ` - ${event.locationAddress}`}
+                    </p>
+                    {event.notes && (
+                      <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                        {event.notes}
+                      </p>
+                    )}
+                    {event.type === "GAME" && !event.isCancelled && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="success">
+                          <Users className="h-3 w-3 mr-1 inline" />
+                          {event._count?.attendanceRsvps ?? 0} confirmed
+                        </Badge>
+                        <Link href={`/rsvp/${event.id}`}>
+                          <Button size="sm" variant="outline">RSVP</Button>
+                        </Link>
+                      </div>
+                    )}
+
+                    {/* Coach RSVP Section */}
+                    {isCoach && !event.isCancelled && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Coach Availability</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleCoachRsvp(event.id, "GOING")}
+                            disabled={rsvpLoading === event.id}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                              myStatus === "GOING"
+                                ? "bg-green-100 text-green-800 ring-1 ring-green-300"
+                                : "bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700"
+                            }`}
+                          >
+                            <Check className="h-3 w-3" />
+                            Going
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCoachRsvp(event.id, "NOT_GOING")}
+                            disabled={rsvpLoading === event.id}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                              myStatus === "NOT_GOING"
+                                ? "bg-red-100 text-red-800 ring-1 ring-red-300"
+                                : "bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-700"
+                            }`}
+                          >
+                            <XCircle className="h-3 w-3" />
+                            Can&apos;t Make It
+                          </button>
+                        </div>
+                        {(goingCoaches.length > 0 || notGoingCoaches.length > 0) && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {goingCoaches.map((r) => (
+                              <span key={r.id} className="inline-flex items-center text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                                <Check className="h-2.5 w-2.5 mr-1" />
+                                {r.coach.name}
+                              </span>
+                            ))}
+                            {notGoingCoaches.map((r) => (
+                              <span key={r.id} className="inline-flex items-center text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">
+                                <XCircle className="h-2.5 w-2.5 mr-1" />
+                                {r.coach.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {isCoach && (
+                    <div className="flex gap-1 shrink-0 ml-2">
+                      <button onClick={() => startEdit(event)} className="p-1.5 hover:bg-gray-100 rounded">
+                        <Edit2 className="h-3.5 w-3.5 text-muted" />
+                      </button>
+                      <button onClick={() => deleteEvent(event.id)} className="p-1.5 hover:bg-gray-100 rounded">
+                        <Trash2 className="h-3.5 w-3.5 text-muted" />
+                      </button>
                     </div>
                   )}
                 </div>
-                {isCoach && (
-                  <div className="flex gap-1 shrink-0 ml-2">
-                    <button onClick={() => startEdit(event)} className="p-1.5 hover:bg-gray-100 rounded">
-                      <Edit2 className="h-3.5 w-3.5 text-muted" />
-                    </button>
-                    <button onClick={() => deleteEvent(event.id)} className="p-1.5 hover:bg-gray-100 rounded">
-                      <Trash2 className="h-3.5 w-3.5 text-muted" />
-                    </button>
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
