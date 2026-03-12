@@ -134,6 +134,177 @@ Guided walkthrough for new parents visiting the portal for the first time.
 
 ---
 
+### 8. Unread Badge on Chat Nav Tab
+
+**Priority:** High
+**Effort:** ~1-2 hours
+
+Show an unread message indicator on the Chat nav tab so coaches know when new messages arrive without checking manually.
+
+**Scope:**
+- Track last-read timestamp in localStorage per coach
+- Poll `/api/chat?after=<timestamp>` for unread count
+- Show small red dot or numeric badge on the Chat tab in both desktop and mobile nav
+- Clear badge when coach visits the Chat page
+- Lightweight — no new DB schema, uses existing chat API
+
+---
+
+### 9. Schedule Page — Group Events by Week
+
+**Priority:** High
+**Effort:** ~1-2 hours
+
+Group schedule events with date section dividers instead of a flat list.
+
+**Scope:**
+- Group events into "This Week", "Next Week", or by month for events further out
+- Sticky date headers that stay visible while scrolling
+- Collapsible week sections (optional)
+- Works for both coaches and parents
+- No API changes — purely client-side grouping of existing data
+
+---
+
+### 10. Home Page — RSVP Status on Upcoming Games
+
+**Priority:** High
+**Effort:** ~1 hour
+
+Show parents whether they've already RSVP'd for upcoming games directly on the Home page.
+
+**Scope:**
+- Read RSVP data from localStorage (already stored by the RSVP page)
+- Show "✓ RSVP'd" badge or checkmark next to game events on the Upcoming Events section
+- Saves parents a click — they don't need to tap into RSVP page to check status
+- Client component wrapper or hybrid approach for localStorage access on server-rendered page
+
+---
+
+### 11. Improved Empty States with Icons & CTAs
+
+**Priority:** Medium
+**Effort:** ~1-2 hours
+
+Replace plain text empty states with illustrated empty states that include icons and call-to-action buttons.
+
+**Scope:**
+- Schedule: Calendar icon + "No events scheduled" + "Add Event" button (coaches)
+- Chat: MessageCircle icon + "No messages yet — start the conversation!"
+- Volunteer: HandHelping icon + "No volunteer roles available right now"
+- Updates: Megaphone icon + "No updates yet" + "Post Update" button (coaches)
+- Consistent styling across all empty states (centered icon, muted text, optional CTA)
+
+---
+
+### 12. Toast Position — Mobile Optimization
+
+**Priority:** Medium
+**Effort:** ~30 min
+
+Move toast notifications to top-center on mobile viewports to avoid overlapping chat input or bottom navigation.
+
+**Scope:**
+- Detect mobile viewport (Tailwind responsive classes or media query)
+- Bottom-right on desktop (current), top-center on mobile
+- Adjust animation direction (slide-down on mobile vs slide-in on desktop)
+- No logic changes — purely CSS/positioning update in toast component
+
+---
+
+### 13. Coach RSVP Summary Bar on Schedule
+
+**Priority:** Medium
+**Effort:** ~1 hour
+
+Add a summary bar at the top of the Schedule page showing coaches their overall RSVP status at a glance.
+
+**Scope:**
+- "You've RSVP'd to 6/8 upcoming events" progress indicator
+- Small horizontal bar below the page header, visible only to coaches
+- Computed from existing coachRsvps data already loaded with events
+- Links to first un-RSVP'd event when tapped
+- No API changes — uses data already in the response
+
+---
+
+### 14. Chat — Skeleton Loading States
+
+**Priority:** Medium
+**Effort:** ~30 min
+
+Replace the plain "Loading messages..." text on the Chat page with chat-bubble-shaped skeleton loaders.
+
+**Scope:**
+- Chat bubble skeletons (alternating left/right alignment)
+- Shimmer animation matching existing skeleton components
+- 4-6 skeleton bubbles with varying widths for realistic appearance
+- Reuse existing skeleton/shimmer patterns from `src/components/ui/skeleton.tsx`
+
+---
+
+### 15. Chat — Character Counter
+
+**Priority:** Low
+**Effort:** ~15 min
+
+Show a character counter near the chat input to indicate how many characters remain before hitting the 2000-character limit.
+
+**Scope:**
+- Subtle "142/2000" counter below or beside the textarea
+- Changes color to warning (amber) at 1800+ characters and danger (red) at 1950+
+- Prevents surprise validation errors on long messages
+- Purely client-side — no API changes
+
+---
+
+### 16. Active Press Feedback on RSVP Buttons
+
+**Priority:** Low
+**Effort:** ~15 min
+
+Add tactile press feedback (scale animation) to the Coach RSVP Going/Can't Make It buttons.
+
+**Scope:**
+- Add `active:scale-[0.97]` and `transition-transform` to RSVP toggle buttons
+- Match the existing press feedback pattern used in the Button component
+- Apply to both Going and Can't Make It buttons on Schedule page
+- Single-line CSS class additions — no logic changes
+
+---
+
+### 17. Swipe-to-Action on Schedule Events (Mobile Coaches)
+
+**Priority:** Low
+**Effort:** ~3-4 hours
+
+Replace small Edit/Trash icons with swipe gestures on mobile for a more native feel.
+
+**Scope:**
+- Swipe left on an event card to reveal Edit and Delete action buttons
+- Touch gesture handling with snap-back animation
+- Fallback to current icon buttons on desktop
+- Only visible to coaches (parents see no actions)
+- Consider a lightweight swipe library or custom touch handler
+
+---
+
+### 18. Schedule Page — Refresh Button
+
+**Priority:** Low
+**Effort:** ~30 min
+
+Add a visible refresh button on the Schedule page for coaches and parents to manually reload events without a full page refresh.
+
+**Scope:**
+- Small RefreshCw icon button near the page header
+- Triggers existing `load()` function
+- Spin animation while loading
+- Complements pull-to-refresh (item #3) for non-touch users
+- Also useful on Chat page for manual refresh
+
+---
+
 ---
 
 ## Completed
@@ -170,4 +341,4 @@ Automated SMS and email reminders to volunteer parents — 24 hours and 90 minut
 
 ---
 
-*Last updated: March 2026*
+*Last updated: March 11, 2026*
