@@ -305,6 +305,31 @@ Add a visible refresh button on the Schedule page for coaches and parents to man
 
 ---
 
+### 19. Image Uploads on Updates
+
+**Priority:** High
+**Effort:** ~3-4 hours
+
+Allow coaches to attach a small image when posting an update, displayed on both the Updates page and the Home page "Recent Updates" section.
+
+**Scope:**
+- Cloudflare R2 storage integration (S3-compatible, free tier: 10GB + 10M reads/mo, no egress fees)
+- Install `@aws-sdk/client-s3` for R2 uploads
+- New env vars: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`
+- New `/api/upload` route accepting FormData, uploads to R2, returns public URL
+- Add optional `imageUrl` field to Update model in Prisma schema
+- Update `postUpdateSchema` validator to accept optional imageUrl string
+- Update Updates API (POST/PUT) to store imageUrl
+- Updates page: add image picker button to compose form with client-side preview before posting
+- Updates page: display image thumbnail below update message
+- Home page: display image thumbnail in Recent Updates cards
+- Client-side resize/compress before upload (cap at ~2MB)
+- Next.js `images.remotePatterns` config for R2 domain
+
+**Foundation note:** This R2 integration and upload API will be reused by Backlog Item #1 (Photo Upload & Sharing), making that feature faster to build later.
+
+---
+
 ---
 
 ## Completed
@@ -341,4 +366,4 @@ Automated SMS and email reminders to volunteer parents — 24 hours and 90 minut
 
 ---
 
-*Last updated: March 11, 2026*
+*Last updated: March 12, 2026*
