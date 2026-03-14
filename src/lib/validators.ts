@@ -194,3 +194,9 @@ export const coachRsvpSchema = z.object({
 export const chatMessageSchema = z.object({
   content: z.string().min(1).max(2000),
 });
+
+export const eventAllergySchema = z.object({
+  eventId: z.string(),
+  familyId: z.string(),
+  allergies: z.string().min(1).max(500),
+});

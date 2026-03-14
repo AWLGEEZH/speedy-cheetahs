@@ -58,6 +58,7 @@ model Family {
   contacts         Contact[]
   volunteerSignups VolunteerSignup[]
   attendanceRsvps  AttendanceRsvp[]
+  eventAllergies   EventAllergy[]
 }
 
 model Contact {
@@ -113,6 +114,7 @@ model Event {
   gameState       GameState?
   attendanceRsvps AttendanceRsvp[]
   coachRsvps      CoachRsvp[]
+  eventAllergies  EventAllergy[]
 }
 
 enum EventType {
@@ -171,6 +173,21 @@ model VolunteerSignup {
 
   @@unique([familyId, roleId])
   @@index([roleId])
+}
+
+model EventAllergy {
+  id        String   @id @default(cuid())
+  eventId   String
+  familyId  String
+  allergies String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, familyId])
+  @@index([eventId])
 }
 
 // ─── GAME DAY ──────────────────────────────────────────
