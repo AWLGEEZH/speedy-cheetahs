@@ -32,7 +32,8 @@ function UpdatesContent() {
   async function load() {
     try {
       const res = await fetch("/api/updates");
-      setUpdates(await res.json());
+      const data = await res.json();
+      if (Array.isArray(data)) setUpdates(data);
     } catch { /* ignore */ }
     setLoading(false);
   }
