@@ -40,6 +40,7 @@ export async function PUT(
       data: {
         title: parsed.data.title,
         message: parsed.data.message,
+        imageUrl: parsed.data.imageUrl || null,
       },
       include: {
         coach: { select: { name: true } },

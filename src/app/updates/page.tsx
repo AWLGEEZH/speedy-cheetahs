@@ -11,7 +11,7 @@ import { SkeletonCard } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatDateTime } from "@/lib/utils";
 import type { UpdateWithCoach } from "@/types";
-import { X, MessageSquare, Send, Mail, Pencil, Trash2 } from "lucide-react";
+import { X, MessageSquare, Send, Mail, Pencil, Trash2, ImageIcon } from "lucide-react";
 
 function UpdatesContent() {
   const { isCoach, coach } = useAuth();
@@ -19,11 +19,11 @@ function UpdatesContent() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [sending, setSending] = useState(false);
-  const [form, setForm] = useState({ title: "", message: "", sendSms: false, sendEmail: false });
+  const [form, setForm] = useState({ title: "", message: "", imageUrl: "", sendSms: false, sendEmail: false });
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", message: "" });
+  const [editForm, setEditForm] = useState({ title: "", message: "", imageUrl: "" });
   const [editSaving, setEditSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -61,7 +61,7 @@ function UpdatesContent() {
           form.sendEmail && "Email",
         ].filter(Boolean);
         const suffix = channels.length > 0 ? ` & ${channels.join(" + ")} sent` : "";
-        setForm({ title: "", message: "", sendSms: false, sendEmail: false });
+        setForm({ title: "", message: "", imageUrl: "", sendSms: false, sendEmail: false });
         addToast(`Update posted${suffix}`, "success");
       } else {
         addToast("Failed to post update", "error");
@@ -139,6 +139,29 @@ function UpdatesContent() {
             <form onSubmit={handleSubmit} className="space-y-3">
               <Input label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Practice Cancelled Tomorrow" required />
               <Textarea label="Message" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Details..." rows={3} required />
+              <div>
+                <Input
+                  label="Image URL (optional)"
+                  value={form.imageUrl}
+                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                  placeholder="https://i.imgur.com/example.jpg"
+                />
+                <p className="text-xs text-muted mt-1">
+                  Tip: Upload your photo to <a href="https://imgur.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">imgur.com</a> and paste the direct image link here.
+                </p>
+                {form.imageUrl && (
+                  <div className="mt-2 relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={form.imageUrl}
+                      alt="Preview"
+                      className="max-h-40 rounded-lg border border-border object-contain"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; }}
+                    />
+                  </div>
+                )}
+              </div>
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted uppercase tracking-wide">Notify families</p>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -197,6 +220,26 @@ function UpdatesContent() {
                     rows={3}
                     required
                   />
+                  <div>
+                    <Input
+                      label="Image URL (optional)"
+                      value={editForm.imageUrl}
+                      onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                      placeholder="https://i.imgur.com/example.jpg"
+                    />
+                    {editForm.imageUrl && (
+                      <div className="mt-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={editForm.imageUrl}
+                          alt="Preview"
+                          className="max-h-40 rounded-lg border border-border object-contain"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; }}
+                        />
+                      </div>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <Button size="sm" type="submit" disabled={editSaving}>
                       {editSaving ? "Saving..." : "Save"}
@@ -222,7 +265,7 @@ function UpdatesContent() {
                         <button
                           onClick={() => {
                             setEditingId(update.id);
-                            setEditForm({ title: update.title, message: update.message });
+                            setEditForm({ title: update.title, message: update.message, imageUrl: update.imageUrl || "" });
                           }}
                           className="p-1 text-muted hover:text-primary rounded"
                           title="Edit update"
@@ -241,6 +284,17 @@ function UpdatesContent() {
                     )}
                   </div>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{update.message}</p>
+                  {update.imageUrl && (
+                    <div className="mt-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={update.imageUrl}
+                        alt={update.title}
+                        className="max-w-full max-h-64 rounded-lg border border-border object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    </div>
+                  )}
                   <p className="text-xs text-muted mt-2">
                     {update.coach.name} &middot; {formatDateTime(update.createdAt)}
                   </p>

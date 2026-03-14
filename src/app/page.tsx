@@ -146,6 +146,16 @@ export default async function HomePage() {
                   <p className="text-sm text-muted mt-1 whitespace-pre-wrap">
                     {update.message}
                   </p>
+                  {update.imageUrl && (
+                    <div className="mt-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={update.imageUrl}
+                        alt={update.title}
+                        className="max-w-full max-h-48 rounded-lg border border-border object-contain"
+                      />
+                    </div>
+                  )}
                   <p className="text-xs text-muted mt-2">
                     Posted by {update.coach.name} &middot;{" "}
                     {formatDateTime(update.createdAt)}

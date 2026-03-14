@@ -129,6 +129,7 @@ model Update {
   id         String   @id @default(cuid())
   title      String
   message    String   @db.Text
+  imageUrl   String?  @db.Text
   smsSent    Boolean  @default(false)
   smsCount   Int      @default(0)
   emailSent  Boolean  @default(false)

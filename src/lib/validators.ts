@@ -75,6 +75,7 @@ export const volunteerSignupSchema = z.object({
 export const postUpdateSchema = z.object({
   title: z.string().min(1).max(200),
   message: z.string().min(1).max(2000),
+  imageUrl: z.string().url().max(2048).optional().or(z.literal("")),
   eventId: z.string().optional(),
   sendSms: z.boolean().default(false),
   sendEmail: z.boolean().default(false),
@@ -83,6 +84,7 @@ export const postUpdateSchema = z.object({
 export const updateUpdateSchema = z.object({
   title: z.string().min(1).max(200),
   message: z.string().min(1).max(2000),
+  imageUrl: z.string().url().max(2048).optional().or(z.literal("")),
 });
 
 export const attendanceRsvpSchema = z.object({

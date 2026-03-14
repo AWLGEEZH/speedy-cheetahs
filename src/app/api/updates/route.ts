@@ -94,6 +94,7 @@ export async function POST(request: Request) {
     const update = await prisma.update.create({
       data: {
         ...updateData,
+        imageUrl: updateData.imageUrl || null,
         eventId: updateData.eventId || null,
         coachId: session.coachId,
         smsSent,
