@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, formatRelative } from "@/lib/utils";
 import type { UpdateWithCoach } from "@/types";
 import { X, MessageSquare, Send, Mail, Pencil, Trash2, ImageIcon } from "lucide-react";
 
@@ -296,8 +296,8 @@ function UpdatesContent() {
                       />
                     </div>
                   )}
-                  <p className="text-xs text-muted mt-2">
-                    {update.coach.name} &middot; {formatDateTime(update.createdAt)}
+                  <p className="text-xs text-muted mt-2" title={formatDateTime(update.createdAt)}>
+                    {update.coach.name} &middot; {formatRelative(update.createdAt)}
                   </p>
                 </>
               )}

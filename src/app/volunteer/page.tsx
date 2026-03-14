@@ -360,9 +360,15 @@ function VolunteerContent() {
                                     <p className="text-xs text-muted">{role.description}</p>
                                   )}
                                 </div>
-                                <Badge variant={isFull ? "success" : "warning"}>
-                                  {role.signups.length}/{role.slotsNeeded} filled
-                                </Badge>
+                                {isFull ? (
+                                  <Badge variant="success">
+                                    {role.signups.length}/{role.slotsNeeded} filled
+                                  </Badge>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 ring-1 ring-amber-300 animate-pulse">
+                                    {role.slotsNeeded - role.signups.length} spot{role.slotsNeeded - role.signups.length !== 1 ? "s" : ""} left!
+                                  </span>
+                                )}
                               </div>
                             </button>
                             {isCoach && (

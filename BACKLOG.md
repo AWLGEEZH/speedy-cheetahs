@@ -57,7 +57,7 @@ Redesign dashboard with better visual hierarchy, gradient cards, and data visual
 **Priority:** Medium
 **Effort:** ~2-4 hours
 
-Add native-feeling pull-to-refresh on key PWA pages.
+Add native-feeling pull-to-refresh on key PWA pages with a visible refresh indicator or "Last updated" timestamp.
 
 **Scope:**
 - Schedule page pull-to-refresh
@@ -65,6 +65,7 @@ Add native-feeling pull-to-refresh on key PWA pages.
 - Game Day page pull-to-refresh
 - Visual pull indicator with team branding
 - Touch gesture handling for iOS and Android
+- "Last updated X min ago" timestamp on pages for visibility
 
 ---
 
@@ -147,22 +148,6 @@ Show an unread message indicator on the Chat nav tab so coaches know when new me
 - Show small red dot or numeric badge on the Chat tab in both desktop and mobile nav
 - Clear badge when coach visits the Chat page
 - Lightweight — no new DB schema, uses existing chat API
-
----
-
-### 9. Schedule Page — Group Events by Week
-
-**Priority:** High
-**Effort:** ~1-2 hours
-
-Group schedule events with date section dividers instead of a flat list.
-
-**Scope:**
-- Group events into "This Week", "Next Week", or by month for events further out
-- Sticky date headers that stay visible while scrolling
-- Collapsible week sections (optional)
-- Works for both coaches and parents
-- No API changes — purely client-side grouping of existing data
 
 ---
 
@@ -305,28 +290,149 @@ Add a visible refresh button on the Schedule page for coaches and parents to man
 
 ---
 
-### 19. Image Uploads on Updates
+### 19. Image Uploads via Cloudflare R2 (Upgrade)
 
-**Priority:** High
+**Priority:** Medium
 **Effort:** ~3-4 hours
 
-Allow coaches to attach a small image when posting an update, displayed on both the Updates page and the Home page "Recent Updates" section.
+Upgrade from paste-URL image support to full drag-and-drop upload via Cloudflare R2. Basic imageUrl support already implemented — this adds native upload UX.
 
 **Scope:**
 - Cloudflare R2 storage integration (S3-compatible, free tier: 10GB + 10M reads/mo, no egress fees)
 - Install `@aws-sdk/client-s3` for R2 uploads
 - New env vars: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`
 - New `/api/upload` route accepting FormData, uploads to R2, returns public URL
-- Add optional `imageUrl` field to Update model in Prisma schema
-- Update `postUpdateSchema` validator to accept optional imageUrl string
-- Update Updates API (POST/PUT) to store imageUrl
-- Updates page: add image picker button to compose form with client-side preview before posting
-- Updates page: display image thumbnail below update message
-- Home page: display image thumbnail in Recent Updates cards
+- Replace text URL input with drag-and-drop file picker or camera button
 - Client-side resize/compress before upload (cap at ~2MB)
-- Next.js `images.remotePatterns` config for R2 domain
+- Reuses existing `imageUrl` field on Update model (already in place)
 
 **Foundation note:** This R2 integration and upload API will be reused by Backlog Item #1 (Photo Upload & Sharing), making that feature faster to build later.
+
+---
+
+### 20. Schedule — Expandable Event Cards on Mobile
+
+**Priority:** High
+**Effort:** ~1-2 hours
+
+Make event cards tappable on mobile to collapse/expand details, reducing visual density.
+
+**Scope:**
+- Show only title, type badge, and date when collapsed
+- Expand to reveal location, notes, RSVP button, and coach availability on tap
+- Smooth height animation for expand/collapse
+- Desktop: always show full details (no collapse behavior)
+- Reduces scroll distance on mobile
+
+---
+
+### 21. Volunteer — One-Tap Signup with Auto-Fill
+
+**Priority:** High
+**Effort:** ~1 hour
+
+Skip the name/phone form if localStorage already has the parent's info. One tap to sign up.
+
+**Scope:**
+- If `speedy-cheetahs-volunteer` localStorage has saved name + phone, sign up immediately on tap
+- Show "Signing up as {Name}..." with cancel option
+- "Not you? Change info" link to show the full form instead
+- Reduces 3-step flow to 1 tap for returning parents
+- Falls back to current form if no saved info
+
+---
+
+### 22. Schedule — RSVP Button Prominence for Imminent Games
+
+**Priority:** Medium
+**Effort:** ~30 min
+
+Make the RSVP button more visible for games happening in the next 48 hours.
+
+**Scope:**
+- Full-width CTA button below event details for games within 48 hours
+- Amber/orange background with "RSVP Now" text instead of small outline button
+- Subtle urgency indicator: "Game tomorrow — RSVP now!"
+- Regular outline button for games further out
+- Purely client-side date comparison — no API changes
+
+---
+
+### 23. Home Page — Sticky "Next Event" Banner
+
+**Priority:** Medium
+**Effort:** ~1 hour
+
+Show a persistent banner when a game or practice is today or tomorrow.
+
+**Scope:**
+- Banner at top of content area: "Practice #5 — Tomorrow at 4:00 PM at Lincoln Park"
+- Amber background for games, blue for practices
+- Dismiss button to hide for the session
+- Only shows for events within 24 hours
+- Links to Schedule page or RSVP page (for games)
+
+---
+
+### 24. Volunteer — Skeleton Loading States
+
+**Priority:** Low
+**Effort:** ~30 min
+
+Replace the plain spinner on the Volunteer page with content-shaped skeleton loaders matching the grouped role layout.
+
+**Scope:**
+- Skeleton group headers (gray bar)
+- Skeleton role rows with badge placeholders
+- Shimmer animation matching existing skeleton components
+- Reduces layout shift when data loads
+- Consistent with Schedule and Updates skeleton patterns
+
+---
+
+### 25. Volunteer — Allergy Indicator on Event Header
+
+**Priority:** Low
+**Effort:** ~15 min
+
+Show a small allergy icon on the event group header bar when allergies have been reported for that event.
+
+**Scope:**
+- Small AlertTriangle icon + count badge next to event label in header bar
+- e.g. "Game #1 ⚠ 2 allergies" in the gray header
+- Coaches can see at a glance which events have allergy concerns
+- Purely visual — data already loaded in `allergies` state
+
+---
+
+### 26. Mobile Nav — Better Active Page Highlight
+
+**Priority:** Low
+**Effort:** ~15 min
+
+Improve the active page indicator in the mobile hamburger menu for better visibility.
+
+**Scope:**
+- Add orange left-border accent or underline to the active tab
+- Current `bg-white/15` is low contrast on the navy background
+- Match active state styling between desktop and mobile menus
+- Single CSS class change in `unified-layout.tsx`
+
+---
+
+### 27. Parent Registration — Search/Filter
+
+**Priority:** Medium
+**Effort:** ~30 min
+
+Add a search input at the top of the registration page to filter players by name.
+
+**Scope:**
+- Real-time text filter above the player grid
+- Matches against player first/last name and parent name
+- Clears when the input is emptied
+- Helpful as roster grows beyond 10-15 players
+- Purely client-side filtering — no API changes
 
 ---
 
@@ -366,4 +472,44 @@ Automated SMS and email reminders to volunteer parents — 24 hours and 90 minut
 
 ---
 
-*Last updated: March 12, 2026*
+### ~~Schedule — Group Events by Week~~ ✅
+
+**Completed:** March 2026
+
+Events grouped into "This Week", "Next Week", and monthly sections with sticky headers. Shared `groupEventsByPeriod()` utility in `src/lib/utils.ts`. Past events grouped separately.
+
+---
+
+### ~~Home Page — Visual Event Distinction & Relative Timestamps~~ ✅
+
+**Completed:** March 2026
+
+Event cards on Home page use color-tinted backgrounds and left-border accents (amber for games, blue for practices). "View all →" links added to both sections. Updates show relative timestamps ("2 hours ago") instead of absolute dates.
+
+---
+
+### ~~Volunteer — Prominent Empty Slot Indicators~~ ✅
+
+**Completed:** March 2026
+
+Unfilled volunteer roles now show a pulsing "X spots left!" badge in amber instead of the generic "2/3 filled" counter. Draws parent attention to roles that still need help.
+
+---
+
+### ~~Updates — Relative Timestamps~~ ✅
+
+**Completed:** March 2026
+
+Update cards show relative time ("3 hours ago") with full date/time on hover. Consistent with Home page treatment.
+
+---
+
+### ~~Image URL Support on Updates~~ ✅
+
+**Completed:** March 2026
+
+Coaches can attach images to updates by pasting a direct image URL. Live preview in compose/edit forms. Images display on both Updates page and Home page. Basic paste-URL approach — R2 upload upgrade planned as Backlog Item #19.
+
+---
+
+*Last updated: March 14, 2026*

@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, startOfWeek, addWeeks, isSameWeek, isBefore } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -80,6 +80,47 @@ export function buildEventLabels(
   }
 
   return labels;
+}
+
+/**
+ * Group events into "This Week", "Next Week", or month names for events further out.
+ * Past events get their own "Past" group. Events must be sorted by date ascending.
+ */
+export function groupEventsByPeriod<T extends { date: string }>(
+  events: T[],
+): { label: string; events: T[] }[] {
+  if (events.length === 0) return [];
+
+  const now = new Date();
+  const thisWeekStart = startOfWeek(now, { weekStartsOn: 0 });
+  const nextWeekStart = addWeeks(thisWeekStart, 1);
+  const nextWeekEnd = addWeeks(thisWeekStart, 2);
+
+  const groups = new Map<string, T[]>();
+  const order: string[] = [];
+
+  for (const event of events) {
+    const eventDate = new Date(event.date);
+    let label: string;
+
+    if (isBefore(eventDate, thisWeekStart)) {
+      label = "Past";
+    } else if (isSameWeek(eventDate, now, { weekStartsOn: 0 })) {
+      label = "This Week";
+    } else if (isBefore(eventDate, nextWeekEnd) && !isBefore(eventDate, nextWeekStart)) {
+      label = "Next Week";
+    } else {
+      label = format(eventDate, "MMMM yyyy");
+    }
+
+    if (!groups.has(label)) {
+      groups.set(label, []);
+      order.push(label);
+    }
+    groups.get(label)!.push(event);
+  }
+
+  return order.map((label) => ({ label, events: groups.get(label)! }));
 }
 
 export function formatPhone(phone: string): string {

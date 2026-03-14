@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Calendar, UserPlus, HandHelping, LogIn } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { formatDateTime, buildEventLabels } from "@/lib/utils";
+import { formatDateTime, formatRelative, buildEventLabels } from "@/lib/utils";
 import { TeamLogo } from "@/components/ui/team-logo";
 
 export const dynamic = "force-dynamic";
@@ -89,9 +89,14 @@ export default async function HomePage() {
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Upcoming Events */}
         <section>
-          <h2 className="text-xl font-bold text-secondary mb-4">
-            Upcoming Events
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-secondary">
+              Upcoming Events
+            </h2>
+            <Link href="/schedule" className="text-xs text-primary font-medium hover:underline">
+              View all &rarr;
+            </Link>
+          </div>
           {events.length === 0 ? (
             <p className="text-muted text-sm">No upcoming events scheduled.</p>
           ) : (
@@ -99,27 +104,28 @@ export default async function HomePage() {
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className="bg-surface border border-border rounded-lg p-4 flex items-center justify-between"
+                  className={`rounded-lg p-4 flex items-center justify-between border-l-4 ${
+                    event.type === "GAME"
+                      ? "bg-amber-50 border-l-primary border border-amber-200"
+                      : event.type === "PRACTICE"
+                      ? "bg-blue-50 border-l-blue-500 border border-blue-200"
+                      : "bg-surface border-l-gray-400 border border-border"
+                  }`}
                 >
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-block w-2 h-2 rounded-full ${
-                          event.type === "GAME"
-                            ? "bg-primary"
-                            : event.type === "PRACTICE"
-                            ? "bg-blue-500"
-                            : "bg-gray-400"
-                        }`}
-                      />
-                      <span className="font-medium text-sm">{event.title}</span>
-                    </div>
+                    <span className="font-medium text-sm">{event.title}</span>
                     <p className="text-xs text-muted mt-1">
                       {formatDateTime(event.date)} &middot;{" "}
                       {event.locationName}
                     </p>
                   </div>
-                  <span className="text-xs text-muted font-medium whitespace-nowrap">
+                  <span className={`text-xs font-semibold whitespace-nowrap ${
+                    event.type === "GAME"
+                      ? "text-primary"
+                      : event.type === "PRACTICE"
+                      ? "text-blue-600"
+                      : "text-muted"
+                  }`}>
                     {eventLabels.get(event.id) ?? event.type}
                   </span>
                 </div>
@@ -130,9 +136,14 @@ export default async function HomePage() {
 
         {/* Recent Updates */}
         <section>
-          <h2 className="text-xl font-bold text-secondary mb-4">
-            Recent Updates
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-secondary">
+              Recent Updates
+            </h2>
+            <Link href="/updates" className="text-xs text-primary font-medium hover:underline">
+              View all &rarr;
+            </Link>
+          </div>
           {updates.length === 0 ? (
             <p className="text-muted text-sm">No updates yet.</p>
           ) : (
@@ -157,8 +168,8 @@ export default async function HomePage() {
                     </div>
                   )}
                   <p className="text-xs text-muted mt-2">
-                    Posted by {update.coach.name} &middot;{" "}
-                    {formatDateTime(update.createdAt)}
+                    {update.coach.name} &middot;{" "}
+                    {formatRelative(update.createdAt)}
                   </p>
                 </div>
               ))}
