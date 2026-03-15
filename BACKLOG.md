@@ -436,6 +436,70 @@ Add a search input at the top of the registration page to filter players by name
 
 ---
 
+### 28. Chat Alerts — Browser Notifications (Quick Win)
+
+**Priority:** Medium
+**Effort:** ~1 hour
+
+Use the Browser Notification API to show desktop/mobile banners when a new chat message arrives while the tab is open.
+
+**Scope:**
+- Request `Notification.permission` when coach opens Chat page
+- Fire `new Notification(...)` when polling detects a new message from another coach
+- Show sender name and message preview in the notification
+- Only triggers when tab is open but not focused (e.g. in background tab)
+- No backend changes — purely client-side addition to `chat/page.tsx`
+- Free, zero infrastructure
+
+**Limitation:** Only works while the browser tab is open — no alerts if the browser is closed.
+
+---
+
+### 29. Chat Alerts — SMS/Email Notifications (Recommended)
+
+**Priority:** High
+**Effort:** ~2 hours
+
+Send an SMS or email to other coaches when a new chat message is posted, using existing Twilio + Nodemailer infrastructure.
+
+**Scope:**
+- Add `chatNotifySms Boolean @default(true)` and `chatNotifyEmail Boolean @default(false)` to Coach model
+- On POST `/api/chat`, notify other coaches who have notifications enabled
+- 5-minute cooldown per recipient to prevent spam during active conversations
+- Track `lastChatNotifiedAt` per coach to enforce cooldown
+- Settings toggle on the Settings page for coaches to enable/disable
+- Reuses `sendBulkSms()` and `sendBulkEmail()` from existing `src/lib/twilio.ts` and `src/lib/email.ts`
+- Message format: "[Speedy Cheetahs] Coach {Name}: {preview...} — Open chat: {url}"
+
+**Prerequisite:** Requires `prisma db push` to both local and production databases for new Coach fields.
+
+---
+
+### 30. Chat Alerts — Web Push Notifications (Full PWA)
+
+**Priority:** Low
+**Effort:** ~4-6 hours
+
+Full push notifications via the PWA service worker. Coaches get native-feeling alerts even when the app is closed, including on mobile lock screens (if PWA is installed to home screen).
+
+**Scope:**
+- Generate VAPID keys and add to env vars (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`)
+- Install `web-push` npm package
+- New `PushSubscription` model in Prisma (endpoint, p256dh, auth, coachId)
+- New `/api/push/subscribe` and `/api/push/unsubscribe` API routes
+- Add `push` event handler in `public/sw.js` service worker
+- Permission prompt + subscription management UI on Chat page
+- On POST `/api/chat`, send push notification to subscribed coaches (excluding sender)
+- Notification shows sender name and message preview
+- Click notification opens Chat page
+
+**Caveats:**
+- Web Push support varies on iOS Safari (requires iOS 16.4+ with PWA installed to home screen)
+- Requires HTTPS (already in place on Railway)
+- Subscriptions can expire — need to handle `410 Gone` responses and clean up stale entries
+
+---
+
 ---
 
 ## Completed
@@ -512,4 +576,4 @@ Coaches can attach images to updates by pasting a direct image URL. Live preview
 
 ---
 
-*Last updated: March 14, 2026*
+*Last updated: March 14, 2026 — 30 backlog items, 9 completed*

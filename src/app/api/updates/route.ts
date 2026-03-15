@@ -7,7 +7,11 @@ import { sendBulkEmail } from "@/lib/email";
 
 export async function GET() {
   try {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
     const updates = await prisma.update.findMany({
+      where: { createdAt: { gte: oneWeekAgo } },
       orderBy: { createdAt: "desc" },
       include: {
         coach: { select: { name: true } },

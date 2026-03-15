@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format, formatDistanceToNow, startOfWeek, addWeeks, isSameWeek, isBefore } from "date-fns";
+import { format, formatDistanceToNow, startOfWeek, startOfDay, addWeeks, isSameWeek, isSameDay, isBefore, subDays } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -121,6 +121,48 @@ export function groupEventsByPeriod<T extends { date: string }>(
   }
 
   return order.map((label) => ({ label, events: groups.get(label)! }));
+}
+
+/**
+ * Group updates into "Today", "Yesterday", "Earlier This Week", or "Last Week".
+ * Updates must be sorted by createdAt descending (newest first).
+ * Only updates from the trailing 7 days should be passed in.
+ */
+export function groupUpdatesByPeriod<T extends { createdAt: string | Date }>(
+  updates: T[],
+): { label: string; updates: T[] }[] {
+  if (updates.length === 0) return [];
+
+  const now = new Date();
+  const todayStart = startOfDay(now);
+  const yesterdayStart = startOfDay(subDays(now, 1));
+  const thisWeekStart = startOfWeek(now, { weekStartsOn: 0 });
+
+  const groups = new Map<string, T[]>();
+  const order: string[] = [];
+
+  for (const update of updates) {
+    const updateDate = new Date(update.createdAt);
+    let label: string;
+
+    if (isSameDay(updateDate, now)) {
+      label = "Today";
+    } else if (isSameDay(updateDate, subDays(now, 1))) {
+      label = "Yesterday";
+    } else if (isBefore(thisWeekStart, updateDate) || isSameDay(updateDate, thisWeekStart)) {
+      label = "Earlier This Week";
+    } else {
+      label = "Last Week";
+    }
+
+    if (!groups.has(label)) {
+      groups.set(label, []);
+      order.push(label);
+    }
+    groups.get(label)!.push(update);
+  }
+
+  return order.map((label) => ({ label, updates: groups.get(label)! }));
 }
 
 export function formatPhone(phone: string): string {

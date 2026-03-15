@@ -20,7 +20,11 @@ async function getAllEvents() {
 
 async function getRecentUpdates() {
   try {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
     return await prisma.update.findMany({
+      where: { createdAt: { gte: oneWeekAgo } },
       orderBy: { createdAt: "desc" },
       take: 3,
       include: { coach: { select: { name: true } } },

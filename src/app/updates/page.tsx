@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { formatDateTime, formatRelative } from "@/lib/utils";
+import { formatDateTime, formatRelative, groupUpdatesByPeriod } from "@/lib/utils";
 import type { UpdateWithCoach } from "@/types";
 import { X, MessageSquare, Send, Mail, Pencil, Trash2, ImageIcon } from "lucide-react";
 
@@ -28,6 +28,7 @@ function UpdatesContent() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { addToast } = useToast();
+  const groupedUpdates = useMemo(() => groupUpdatesByPeriod(updates), [updates]);
 
   async function load() {
     try {
@@ -203,104 +204,113 @@ function UpdatesContent() {
       ) : updates.length === 0 ? (
         <p className="text-muted text-sm text-center py-8">No updates yet.</p>
       ) : (
-        <div className="space-y-3">
-          {updates.map((update) => (
-            <div key={update.id} className="bg-surface border border-border rounded-lg p-4">
-              {editingId === update.id ? (
-                <form onSubmit={(e) => { e.preventDefault(); handleEdit(update.id); }} className="space-y-3">
-                  <Input
-                    label="Title"
-                    value={editForm.title}
-                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                    required
-                  />
-                  <Textarea
-                    label="Message"
-                    value={editForm.message}
-                    onChange={(e) => setEditForm({ ...editForm, message: e.target.value })}
-                    rows={3}
-                    required
-                  />
-                  <div>
-                    <Input
-                      label="Image URL (optional)"
-                      value={editForm.imageUrl}
-                      onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
-                      placeholder="https://i.imgur.com/example.jpg"
-                    />
-                    {editForm.imageUrl && (
-                      <div className="mt-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={editForm.imageUrl}
-                          alt="Preview"
-                          className="max-h-40 rounded-lg border border-border object-contain"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                          onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; }}
+        <div className="space-y-6">
+          {groupedUpdates.map((group) => (
+            <div key={group.label}>
+              <div className="sticky top-14 z-10 bg-background/95 backdrop-blur-sm py-2 mb-2">
+                <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">{group.label}</h3>
+              </div>
+              <div className="space-y-3">
+                {group.updates.map((update) => (
+                  <div key={update.id} className="bg-surface border border-border rounded-lg p-4">
+                    {editingId === update.id ? (
+                      <form onSubmit={(e) => { e.preventDefault(); handleEdit(update.id); }} className="space-y-3">
+                        <Input
+                          label="Title"
+                          value={editForm.title}
+                          onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                          required
                         />
-                      </div>
+                        <Textarea
+                          label="Message"
+                          value={editForm.message}
+                          onChange={(e) => setEditForm({ ...editForm, message: e.target.value })}
+                          rows={3}
+                          required
+                        />
+                        <div>
+                          <Input
+                            label="Image URL (optional)"
+                            value={editForm.imageUrl}
+                            onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                            placeholder="https://i.imgur.com/example.jpg"
+                          />
+                          {editForm.imageUrl && (
+                            <div className="mt-2">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={editForm.imageUrl}
+                                alt="Preview"
+                                className="max-h-40 rounded-lg border border-border object-contain"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" type="submit" disabled={editSaving}>
+                            {editSaving ? "Saving..." : "Save"}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingId(null)} type="button">
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <MessageSquare className="h-4 w-4 text-muted" />
+                          <span className="font-medium text-sm flex-1">{update.title}</span>
+                          {isCoach && update.smsSent && (
+                            <Badge variant="success">SMS ({update.smsCount})</Badge>
+                          )}
+                          {isCoach && update.emailSent && (
+                            <Badge variant="info">Email ({update.emailCount})</Badge>
+                          )}
+                          {isCoach && canEditUpdate(update) && (
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => {
+                                  setEditingId(update.id);
+                                  setEditForm({ title: update.title, message: update.message, imageUrl: update.imageUrl || "" });
+                                }}
+                                className="p-1 text-muted hover:text-primary rounded"
+                                title="Edit update"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(update.id)}
+                                disabled={deletingId === update.id}
+                                className="p-1 text-muted hover:text-danger rounded"
+                                title="Delete update"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{update.message}</p>
+                        {update.imageUrl && (
+                          <div className="mt-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={update.imageUrl}
+                              alt={update.title}
+                              className="max-w-full max-h-64 rounded-lg border border-border object-contain"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                            />
+                          </div>
+                        )}
+                        <p className="text-xs text-muted mt-2" title={formatDateTime(update.createdAt)}>
+                          {update.coach.name} &middot; {formatRelative(update.createdAt)}
+                        </p>
+                      </>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" type="submit" disabled={editSaving}>
-                      {editSaving ? "Saving..." : "Save"}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setEditingId(null)} type="button">
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <MessageSquare className="h-4 w-4 text-muted" />
-                    <span className="font-medium text-sm flex-1">{update.title}</span>
-                    {isCoach && update.smsSent && (
-                      <Badge variant="success">SMS ({update.smsCount})</Badge>
-                    )}
-                    {isCoach && update.emailSent && (
-                      <Badge variant="info">Email ({update.emailCount})</Badge>
-                    )}
-                    {isCoach && canEditUpdate(update) && (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => {
-                            setEditingId(update.id);
-                            setEditForm({ title: update.title, message: update.message, imageUrl: update.imageUrl || "" });
-                          }}
-                          className="p-1 text-muted hover:text-primary rounded"
-                          title="Edit update"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(update.id)}
-                          disabled={deletingId === update.id}
-                          className="p-1 text-muted hover:text-danger rounded"
-                          title="Delete update"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{update.message}</p>
-                  {update.imageUrl && (
-                    <div className="mt-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={update.imageUrl}
-                        alt={update.title}
-                        className="max-w-full max-h-64 rounded-lg border border-border object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
-                    </div>
-                  )}
-                  <p className="text-xs text-muted mt-2" title={formatDateTime(update.createdAt)}>
-                    {update.coach.name} &middot; {formatRelative(update.createdAt)}
-                  </p>
-                </>
-              )}
+                ))}
+              </div>
             </div>
           ))}
         </div>
