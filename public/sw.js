@@ -1,4 +1,4 @@
-const CACHE_NAME = "speedy-cheetahs-v1";
+const CACHE_NAME = "3dp-diamonds-v2";
 const OFFLINE_URL = "/offline";
 
 // Assets to pre-cache on install

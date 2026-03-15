@@ -34,10 +34,10 @@ describe("Email Library", () => {
       expect(mockSendMail).toHaveBeenCalledTimes(1);
       const call = mockSendMail.mock.calls[0][0];
       expect(call.to).toBe("parent@example.com");
-      expect(call.subject).toBe("[Speedy Cheetahs] Test Subject");
+      expect(call.subject).toBe("[3DP Diamonds] Test Subject");
       expect(call.text).toContain("Test message body");
       expect(call.html).toContain("Test message body");
-      expect(call.html).toContain("Speedy Cheetahs");
+      expect(call.html).toContain("3D Printed Diamonds");
       expect(call.from).toContain("test@gmail.com");
       expect(result.messageId).toBe("<test-id@gmail.com>");
     });
@@ -111,7 +111,7 @@ describe("Email Library", () => {
 
       const call = mockSendMail.mock.calls[0][0];
       // Check HTML template
-      expect(call.html).toContain("Speedy Cheetahs");
+      expect(call.html).toContain("3D Printed Diamonds");
       expect(call.html).toContain("Schedule Update");
       expect(call.html).toContain("New practice time is 4pm.");
       expect(call.html).toContain("opted in to email notifications");
@@ -119,7 +119,7 @@ describe("Email Library", () => {
       expect(call.text).toContain("New practice time is 4pm.");
       expect(call.text).toContain("opted in to email notifications");
       // Check subject has prefix
-      expect(call.subject).toBe("[Speedy Cheetahs] Schedule Update");
+      expect(call.subject).toBe("[3DP Diamonds] Schedule Update");
     });
 
     it("handles empty recipient list gracefully", async () => {

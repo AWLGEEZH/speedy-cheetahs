@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Speedy Cheetahs - Farm-1 Baseball",
-  description: "Team portal for the Speedy Cheetahs Farm-1 coach pitch baseball team",
+  title: "3D Printed Diamonds - Farm-1 Baseball",
+  description: "Team portal for the 3D Printed Diamonds Farm-1 coach pitch baseball team",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Cheetahs",
+    title: "3DP Diamonds",
   },
   icons: {
     icon: "/favicon.ico",

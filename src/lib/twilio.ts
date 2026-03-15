@@ -43,7 +43,7 @@ export async function sendBulkSms(
       client.messages.create({
         to,
         ...sender,
-        body: `[Speedy Cheetahs] ${message}`,
+        body: `[3DP Diamonds] ${message}`,
       })
     )
   );
@@ -64,6 +64,6 @@ export async function sendSingleSms(
   await client.messages.create({
     to,
     ...sender,
-    body: `[Speedy Cheetahs] ${message}`,
+    body: `[3DP Diamonds] ${message}`,
   });
 }

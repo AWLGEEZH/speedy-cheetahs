@@ -13,7 +13,7 @@ export function stripHtml(html: string): string {
 
 export async function extractTextFromUrl(url: string): Promise<string> {
   const response = await fetch(url, {
-    headers: { "User-Agent": "SpeedyCheetahs-Bot/1.0" },
+    headers: { "User-Agent": "3DPDiamonds-Bot/1.0" },
     signal: AbortSignal.timeout(15000),
   });
   if (!response.ok) {

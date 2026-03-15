@@ -34,5 +34,5 @@ export const VOLUNTEER_ROLE_TEMPLATES = [
 
 export const OUTS_PER_INNING = 6;
 
-export const TEAM_NAME = "Speedy Cheetahs";
+export const TEAM_NAME = "3D Printed Diamonds";
 export const LEAGUE_NAME = "Farm-1";

@@ -46,9 +46,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">&#x1F406;</div>
+          <div className="text-5xl mb-3">&#x1F48E;</div>
           <h1 className="text-2xl font-bold text-secondary">
-            Speedy Cheetahs
+            3D Printed Diamonds
           </h1>
           <p className="text-muted text-sm mt-1">Coach Portal Login</p>
         </div>

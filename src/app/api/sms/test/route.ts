@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const testSmsSchema = z.object({
   to: z.string().min(10).max(20),
-  message: z.string().min(1).max(500).default("This is a test message from Speedy Cheetahs!"),
+  message: z.string().min(1).max(500).default("This is a test message from 3D Printed Diamonds!"),
 });
 
 export async function POST(request: Request) {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const msg = await client.messages.create({
       to: parsed.data.to,
       from,
-      body: `[Speedy Cheetahs] ${parsed.data.message}`,
+      body: `[3DP Diamonds] ${parsed.data.message}`,
     });
 
     return NextResponse.json({

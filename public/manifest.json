@@ -1,7 +1,7 @@
 {
-  "name": "Speedy Cheetahs - Farm-1 Baseball",
-  "short_name": "Cheetahs",
-  "description": "Team portal for the Speedy Cheetahs Farm-1 coach pitch baseball team",
+  "name": "3D Printed Diamonds - Farm-1 Baseball",
+  "short_name": "3DP Diamonds",
+  "description": "Team portal for the 3D Printed Diamonds Farm-1 coach pitch baseball team",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a365d",

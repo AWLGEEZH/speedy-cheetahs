@@ -34,7 +34,7 @@ async function main() {
     update: {},
     create: {
       id: "team-1",
-      name: "Speedy Cheetahs",
+      name: "3D Printed Diamonds",
       league: "Farm-1",
       season: "Spring 2026",
     },
@@ -44,11 +44,11 @@ async function main() {
   // Create head coach
   const passwordHash = await bcrypt.hash("coach123", 12);
   const headCoach = await prisma.coach.upsert({
-    where: { email: "coach@speedycheetahs.com" },
+    where: { email: "coach@3dpdiamonds.com" },
     update: {},
     create: {
       name: "Coach Dad",
-      email: "coach@speedycheetahs.com",
+      email: "coach@3dpdiamonds.com",
       passwordHash,
       role: "HEAD",
       phone: "+15551234567",
@@ -58,11 +58,11 @@ async function main() {
 
   // Create assistant coach
   const assistantCoach = await prisma.coach.upsert({
-    where: { email: "assistant@speedycheetahs.com" },
+    where: { email: "assistant@3dpdiamonds.com" },
     update: {},
     create: {
       name: "Coach Mike",
-      email: "assistant@speedycheetahs.com",
+      email: "assistant@3dpdiamonds.com",
       passwordHash,
       role: "ASSISTANT",
       phone: "+15559876543",
@@ -167,7 +167,7 @@ async function main() {
 
   console.log("\nSeed complete!");
   console.log(`\nLogin credentials:`);
-  console.log(`  Email: coach@speedycheetahs.com`);
+  console.log(`  Email: coach@3dpdiamonds.com`);
   console.log(`  Password: coach123`);
 }
 

@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { formatDateTime, cn } from "@/lib/utils";
 
-const STORAGE_KEY = "speedy-cheetahs-rsvp";
+const STORAGE_KEY = "3dp-diamonds-rsvp";
 
 interface Event {
   id: string;

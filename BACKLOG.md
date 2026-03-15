@@ -1,4 +1,4 @@
-# Speedy Cheetahs — Backlog
+# 3D Printed Diamonds — Backlog
 
 Planned features and improvements for the team portal.
 
@@ -334,7 +334,7 @@ Make event cards tappable on mobile to collapse/expand details, reducing visual 
 Skip the name/phone form if localStorage already has the parent's info. One tap to sign up.
 
 **Scope:**
-- If `speedy-cheetahs-volunteer` localStorage has saved name + phone, sign up immediately on tap
+- If `3dp-diamonds-volunteer` localStorage has saved name + phone, sign up immediately on tap
 - Show "Signing up as {Name}..." with cancel option
 - "Not you? Change info" link to show the full form instead
 - Reduces 3-step flow to 1 tap for returning parents
@@ -469,7 +469,7 @@ Send an SMS or email to other coaches when a new chat message is posted, using e
 - Track `lastChatNotifiedAt` per coach to enforce cooldown
 - Settings toggle on the Settings page for coaches to enable/disable
 - Reuses `sendBulkSms()` and `sendBulkEmail()` from existing `src/lib/twilio.ts` and `src/lib/email.ts`
-- Message format: "[Speedy Cheetahs] Coach {Name}: {preview...} — Open chat: {url}"
+- Message format: "[3DP Diamonds] Coach {Name}: {preview...} — Open chat: {url}"
 
 **Prerequisite:** Requires `prisma db push` to both local and production databases for new Coach fields.
 

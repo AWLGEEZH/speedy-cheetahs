@@ -38,7 +38,7 @@ interface AllergyEntry {
   family: { parentName: string };
 }
 
-const STORAGE_KEY = "speedy-cheetahs-volunteer";
+const STORAGE_KEY = "3dp-diamonds-volunteer";
 
 function VolunteerContent() {
   const { isCoach } = useAuth();

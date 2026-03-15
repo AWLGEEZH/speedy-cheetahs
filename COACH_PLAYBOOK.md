@@ -1,6 +1,6 @@
-# Speedy Cheetahs — Coach Playbook
+# 3D Printed Diamonds — Coach Playbook
 
-Welcome to the Speedy Cheetahs team portal! This guide covers everything you need to know as a coach.
+Welcome to the 3D Printed Diamonds team portal! This guide covers everything you need to know as a coach.
 
 ---
 
@@ -173,4 +173,4 @@ Contact Head Coach **Doyle Zhang** for:
 
 ---
 
-*Go Speedy Cheetahs!*
+*Go 3DP Diamonds!* 💎

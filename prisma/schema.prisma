@@ -33,7 +33,7 @@ enum CoachRole {
 
 model Team {
   id         String   @id @default(cuid())
-  name       String   @default("Speedy Cheetahs")
+  name       String   @default("3D Printed Diamonds")
   league     String   @default("Farm-1")
   season     String
   shareToken String   @unique @default(cuid())

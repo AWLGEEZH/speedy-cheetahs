@@ -8,9 +8,9 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="font-semibold mb-2">Overview</h2>
           <p>
-            Speedy Cheetahs is a youth baseball team management platform used
+            3D Printed Diamonds is a youth baseball team management platform used
             to coordinate schedules, communicate updates, and manage team
-            information for the Speedy Cheetahs Farm-1 coach pitch team.
+            information for the 3D Printed Diamonds Farm-1 coach pitch team.
           </p>
         </section>
 
@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage() {
           <h2 className="font-semibold mb-2">SMS Notifications</h2>
           <p>
             By opting in to SMS notifications, you consent to receive text
-            messages from the Speedy Cheetahs coaching staff regarding team
+            messages from the 3D Printed Diamonds coaching staff regarding team
             activities. Message frequency varies. Message and data rates may
             apply. You can opt out at any time by updating your preferences on
             the parent registration page or by contacting the head coach.
@@ -52,7 +52,7 @@ export default function PrivacyPolicyPage() {
           <h2 className="font-semibold mb-2">Data Sharing</h2>
           <p>
             We do not sell, trade, or share your personal information with
-            third parties. Your data is only accessible to the Speedy Cheetahs
+            third parties. Your data is only accessible to the 3D Printed Diamonds
             coaching staff and is used exclusively for team management
             purposes.
           </p>

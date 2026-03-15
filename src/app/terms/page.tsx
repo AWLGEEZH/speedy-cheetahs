@@ -8,7 +8,7 @@ export default function TermsPage() {
         <section>
           <h2 className="font-semibold mb-2">Acceptance of Terms</h2>
           <p>
-            By accessing and using the Speedy Cheetahs team management
+            By accessing and using the 3D Printed Diamonds team management
             platform, you agree to be bound by these Terms and Conditions. If
             you do not agree with any part of these terms, you should not use
             this platform.
@@ -18,8 +18,8 @@ export default function TermsPage() {
         <section>
           <h2 className="font-semibold mb-2">Description of Service</h2>
           <p>
-            Speedy Cheetahs provides a team management platform for the Speedy
-            Cheetahs Farm-1 coach pitch youth baseball team. The platform
+            3D Printed Diamonds provides a team management platform for the 3D Printed
+            Diamonds Farm-1 coach pitch youth baseball team. The platform
             enables coaches and parents to:
           </p>
           <ul className="list-disc ml-5 mt-1 space-y-1">
@@ -46,8 +46,8 @@ export default function TermsPage() {
           <h2 className="font-semibold mb-2">SMS Notifications</h2>
           <p>
             By opting in to SMS notifications through the parent registration
-            page, you consent to receive text messages from the Speedy
-            Cheetahs coaching staff. These messages may include:
+            page, you consent to receive text messages from the 3D Printed
+            Diamonds coaching staff. These messages may include:
           </p>
           <ul className="list-disc ml-5 mt-1 space-y-1">
             <li>Game and practice schedule updates</li>
@@ -68,7 +68,7 @@ export default function TermsPage() {
           <p>You agree not to:</p>
           <ul className="list-disc ml-5 mt-1 space-y-1">
             <li>
-              Use the platform for any purpose other than Speedy Cheetahs team
+              Use the platform for any purpose other than 3D Printed Diamonds team
               management
             </li>
             <li>
@@ -101,7 +101,7 @@ export default function TermsPage() {
           <h2 className="font-semibold mb-2">Disclaimer</h2>
           <p>
             This platform is provided on an &quot;as is&quot; basis for the
-            convenience of the Speedy Cheetahs team. We make no warranties
+            convenience of the 3D Printed Diamonds team. We make no warranties
             regarding the availability, accuracy, or reliability of the
             platform. The coaching staff is not liable for any issues arising
             from the use of this platform, including but not limited to missed

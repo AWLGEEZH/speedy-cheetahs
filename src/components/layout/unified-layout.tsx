@@ -76,7 +76,7 @@ export function UnifiedLayout({ children }: { children: React.ReactNode }) {
             <Link href="/" className="flex items-center gap-2 shrink-0">
               <TeamLogo size="sm" />
               <div className="hidden sm:block">
-                <div className="font-bold text-sm leading-tight">Speedy Cheetahs</div>
+                <div className="font-bold text-sm leading-tight">3DP Diamonds</div>
                 <div className="text-[10px] text-white/60 leading-tight">Farm-1 Baseball</div>
               </div>
             </Link>

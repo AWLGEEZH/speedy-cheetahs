@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     await sendSingleEmail(
       coach.email,
       "Password Reset Request",
-      `Hi ${coach.name},\n\nYou requested a password reset for your Speedy Cheetahs coach account.\n\nClick the link below to set a new password (expires in 15 minutes):\n\n${resetUrl}\n\nIf you did not request this, you can safely ignore this email.`
+      `Hi ${coach.name},\n\nYou requested a password reset for your 3D Printed Diamonds coach account.\n\nClick the link below to set a new password (expires in 15 minutes):\n\n${resetUrl}\n\nIf you did not request this, you can safely ignore this email.`
     );
 
     return NextResponse.json({ ok: true });

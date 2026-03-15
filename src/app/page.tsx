@@ -53,7 +53,7 @@ export default async function HomePage() {
           <div className="flex justify-center mb-4">
             <TeamLogo size="xl" />
           </div>
-          <h1 className="text-4xl font-bold mb-2 tracking-tight">Speedy Cheetahs</h1>
+          <h1 className="text-4xl font-bold mb-2 tracking-tight">3D Printed Diamonds</h1>
           <p className="text-white/70 text-lg">Farm-1 Coach Pitch Baseball</p>
           <div className="w-12 h-0.5 bg-primary mx-auto mt-4 mb-8 rounded-full" />
           <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">

@@ -1,6 +1,6 @@
-# Speedy Cheetahs — Parent & Family Guide
+# 3D Printed Diamonds — Parent & Family Guide
 
-Welcome to the Speedy Cheetahs team portal! This guide covers everything you need to know as a parent or family member.
+Welcome to the 3D Printed Diamonds team portal! This guide covers everything you need to know as a parent or family member.
 
 **No login required** — all parent features are open and accessible from your phone or computer.
 
@@ -98,7 +98,7 @@ Your info is saved so you don't have to re-enter it next time. Filled roles are 
 
 ### Text Messages (SMS)
 
-If you opt in during registration, you'll receive text alerts when coaches post important updates. Messages come from the team's notification number with a **[Speedy Cheetahs]** tag.
+If you opt in during registration, you'll receive text alerts when coaches post important updates. Messages come from the team's notification number with a **[3DP Diamonds]** tag.
 
 ### Email
 
@@ -143,4 +143,4 @@ Contact Head Coach **Doyle Zhang** with any questions or issues.
 
 ---
 
-*Go Speedy Cheetahs!*
+*Go 3DP Diamonds!* 💎

@@ -1,6 +1,6 @@
-# Speedy Cheetahs — Functional Requirements
+# 3D Printed Diamonds — Functional Requirements
 
-Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team management portal.
+Complete list of implemented capabilities for the 3D Printed Diamonds Farm-1 team management portal.
 
 ---
 
@@ -128,7 +128,7 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 - [x] Bulk SMS to opted-in families when posting updates
 - [x] SMS sent to additional contacts (second parent, emergency contacts) for opted-in families
 - [x] Phone number normalization (E.164 format)
-- [x] Message prefix: "[Speedy Cheetahs]"
+- [x] Message prefix: "[3DP Diamonds]"
 - [x] Sent vs. failed tracking per update
 - [x] Error handling for invalid numbers
 
@@ -200,7 +200,7 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 ## 14. Home Page (Public)
 
-- [x] Team branding with SVG Cheetah logo (navy & amber)
+- [x] Team branding with SVG Diamond logo (navy & amber)
 - [x] Hero section with gradient background
 - [x] 2x2 icon tile grid: View Schedule, Parent Registration, Volunteer Sign-Up, Coach Login
 - [x] Hover scale animations on tiles
@@ -239,9 +239,9 @@ Complete list of implemented capabilities for the Speedy Cheetahs Farm-1 team ma
 
 - [x] Web App Manifest (`manifest.json`) with app name, icons, theme color, standalone display
 - [x] Service worker with network-first caching strategy
-- [x] Branded offline fallback page (SVG Cheetah logo + retry button + gradient bg)
+- [x] Branded offline fallback page (SVG Diamond logo + retry button + gradient bg)
 - [x] App icons: 192x192, 512x512 PNG + Apple Touch Icon (180x180) + Favicon
-- [x] Custom-generated icons with navy/amber cheetah design
+- [x] Custom-generated icons with navy/amber diamond design
 - [x] iOS support: `apple-mobile-web-app-capable`, status bar styling
 - [x] "Add to Home Screen" support on iOS and Android
 - [x] Full-screen standalone mode (hides browser URL bar)

@@ -19,59 +19,41 @@ export function TeamLogo({ size = "md", className }: TeamLogoProps) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={cn(sizes[size], className)}
-      aria-label="Speedy Cheetahs logo"
+      aria-label="3D Printed Diamonds logo"
     >
       {/* Background circle */}
       <circle cx="32" cy="32" r="30" fill="#1e3a5f" stroke="#d97706" strokeWidth="3" />
 
-      {/* Cheetah body - sleek running form */}
-      <g transform="translate(8, 16)">
-        {/* Body */}
-        <ellipse cx="24" cy="18" rx="14" ry="8" fill="#d97706" />
+      {/* 3D Diamond shape */}
+      <g transform="translate(32, 32)">
+        {/* Diamond crown (top facets) */}
+        {/* Top point */}
+        <polygon points="0,-20 -12,-6 12,-6" fill="#f59e0b" />
+        {/* Left crown facet */}
+        <polygon points="0,-20 -12,-6 -18,-6" fill="#d97706" />
+        {/* Right crown facet */}
+        <polygon points="0,-20 12,-6 18,-6" fill="#eab308" />
 
-        {/* Head */}
-        <circle cx="40" cy="13" r="7" fill="#d97706" />
+        {/* Girdle (middle band) */}
+        <polygon points="-18,-6 -12,-6 -8,-2 -14,-2" fill="#b45309" />
+        <polygon points="-12,-6 0,-6 4,-2 -8,-2" fill="#d97706" />
+        <polygon points="0,-6 12,-6 8,-2 4,-2" fill="#ca8a04" />
+        <polygon points="12,-6 18,-6 14,-2 8,-2" fill="#b45309" />
 
-        {/* Ear */}
-        <path d="M43 7 L46 3 L44 8Z" fill="#b45309" />
-        <path d="M38 7 L36 2 L40 7Z" fill="#b45309" />
+        {/* Pavilion (bottom facets) */}
+        {/* Left facet */}
+        <polygon points="-14,-2 -8,-2 0,22" fill="#92400e" />
+        {/* Center-left facet */}
+        <polygon points="-8,-2 4,-2 0,22" fill="#b45309" />
+        {/* Center-right facet */}
+        <polygon points="4,-2 8,-2 0,22" fill="#a16207" />
+        {/* Right facet */}
+        <polygon points="8,-2 14,-2 0,22" fill="#78350f" />
 
-        {/* Eye */}
-        <circle cx="42" cy="12" r="1.5" fill="#0f172a" />
-        <circle cx="42.5" cy="11.5" r="0.5" fill="white" />
-
-        {/* Nose */}
-        <ellipse cx="45" cy="14" rx="1.2" ry="0.8" fill="#0f172a" />
-
-        {/* Tear line (cheetah marking) */}
-        <path d="M43 14.5 C43 16 42 19 41 20" stroke="#0f172a" strokeWidth="1" strokeLinecap="round" fill="none" />
-
-        {/* Spots */}
-        <circle cx="20" cy="14" r="1.2" fill="#b45309" />
-        <circle cx="25" cy="12" r="1" fill="#b45309" />
-        <circle cx="30" cy="15" r="1.3" fill="#b45309" />
-        <circle cx="17" cy="18" r="1" fill="#b45309" />
-        <circle cx="23" cy="20" r="1.1" fill="#b45309" />
-        <circle cx="28" cy="19" r="0.9" fill="#b45309" />
-        <circle cx="33" cy="12" r="1" fill="#b45309" />
-
-        {/* Front legs - running */}
-        <path d="M34 24 L38 32" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
-        <path d="M30 25 L26 32" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
-
-        {/* Back legs - running */}
-        <path d="M16 23 L10 30" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
-        <path d="M14 22 L18 30" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
-
-        {/* Tail */}
-        <path
-          d="M10 16 C4 12 2 8 6 5"
-          stroke="#d97706"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <circle cx="6" cy="5" r="1.5" fill="#0f172a" />
+        {/* Highlight sparkle (top-left) */}
+        <polygon points="-4,-14 -2,-10 -6,-10" fill="white" opacity="0.5" />
+        {/* Small sparkle */}
+        <circle cx="6" cy="-12" r="1" fill="white" opacity="0.4" />
       </g>
     </svg>
   );

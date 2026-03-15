@@ -6,7 +6,7 @@ import { z } from "zod";
 const testEmailSchema = z.object({
   to: z.string().email(),
   subject: z.string().min(1).max(200).default("Test Email"),
-  message: z.string().min(1).max(500).default("This is a test email from Speedy Cheetahs!"),
+  message: z.string().min(1).max(500).default("This is a test email from 3D Printed Diamonds!"),
 });
 
 export async function POST(request: Request) {
