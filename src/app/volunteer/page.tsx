@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
 import { VOLUNTEER_ROLE_TEMPLATES } from "@/lib/constants";
 import { formatDate, buildEventLabels } from "@/lib/utils";
-import { X, Users, HandHelping, UserPlus, Trash2, AlertTriangle } from "lucide-react";
+import { X, Users, HandHelping, UserPlus, Trash2, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 interface VolunteerRole {
@@ -55,6 +55,9 @@ function VolunteerContent() {
   const [submitting, setSubmitting] = useState(false);
   const [familyName, setFamilyName] = useState("");
   const [familyPhone, setFamilyPhone] = useState("");
+
+  // Past events toggle
+  const [showPast, setShowPast] = useState(false);
 
   // Allergies
   const [allergies, setAllergies] = useState<Record<string, AllergyEntry[]>>({});
@@ -236,6 +239,200 @@ function VolunteerContent() {
     return acc;
   }, {});
 
+  // Split into upcoming and past event groups
+  const now = new Date();
+  const upcomingEntries = Object.entries(grouped).filter(([key]) => {
+    const dateStr = key.split("|||")[1];
+    return new Date(dateStr) >= now;
+  });
+  const pastEntries = Object.entries(grouped).filter(([key]) => {
+    const dateStr = key.split("|||")[1];
+    return new Date(dateStr) < now;
+  });
+
+  function renderEventGroup(key: string, eventRoles: VolunteerRole[]) {
+    const [label, dateStr, eventId] = key.split("|||");
+    const eventAllergies = allergies[eventId] || [];
+    const isAllergyExpanded = allergyExpandedEvent === eventId;
+
+    return (
+      <div key={key} className="bg-surface border border-border rounded-lg overflow-hidden">
+        <div className="bg-gray-50 px-4 py-2 border-b border-border">
+          <span className="font-semibold text-sm">{label}</span>
+          <span className="text-xs text-muted ml-2">{formatDate(dateStr)}</span>
+        </div>
+        <div className="divide-y divide-border">
+          {eventRoles.map((role) => {
+            const isFull = role.signups.length >= role.slotsNeeded;
+            const isExpanded = signingUp === role.id;
+
+            return (
+              <div key={role.id}>
+                {/* Role row */}
+                <div
+                  className={`w-full text-left px-4 py-3 transition-colors ${
+                    isFull
+                      ? "opacity-70"
+                      : isCoach
+                        ? ""
+                        : isExpanded
+                          ? "bg-primary/5"
+                          : "hover:bg-gray-50 active:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => !isFull && !isCoach && handleTapRole(role.id)}
+                      disabled={isFull || isCoach}
+                      className={`flex-1 min-w-0 text-left ${
+                        !isFull && !isCoach ? "cursor-pointer" : "cursor-default"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{role.name}</span>
+                            {!isFull && !isExpanded && !isCoach && (
+                              <UserPlus className="h-3.5 w-3.5 text-primary" />
+                            )}
+                          </div>
+                          {role.description && (
+                            <p className="text-xs text-muted">{role.description}</p>
+                          )}
+                        </div>
+                        {isFull ? (
+                          <Badge variant="success">
+                            {role.signups.length}/{role.slotsNeeded} filled
+                          </Badge>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 ring-1 ring-amber-300 animate-pulse">
+                            {role.slotsNeeded - role.signups.length} spot{role.slotsNeeded - role.signups.length !== 1 ? "s" : ""} left!
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                    {isCoach && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRole(role.id, role.name)}
+                        className="p-1.5 hover:bg-gray-100 rounded shrink-0"
+                        title="Delete role"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-muted" />
+                      </button>
+                    )}
+                  </div>
+                  {role.signups.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {role.signups.map((s) => (
+                        <span
+                          key={s.id}
+                          className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
+                        >
+                          {s.family.parentName}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Inline sign-up form (parents only) */}
+                {isExpanded && !isCoach && (
+                  <div className="px-4 pb-4 bg-primary/5 border-t border-primary/20">
+                    <div className="pt-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                          Sign up for {role.name}
+                        </p>
+                        <button type="button" onClick={() => setSigningUp(null)} className="text-muted hover:text-foreground p-1">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <Input label="Your Name" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Parent/Guardian name" required />
+                        <Input label="Phone Number" type="tel" value={familyPhone} onChange={(e) => setFamilyPhone(e.target.value)} placeholder="(555) 123-4567" required />
+                      </div>
+                      <Button size="sm" onClick={() => handleSignup(role.id)} disabled={submitting} className="w-full sm:w-auto">
+                        {submitting ? "Signing up..." : "Sign Up"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Allergies Section */}
+        <div className="border-t border-border px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Allergies</span>
+            </div>
+            {!isAllergyExpanded && (
+              <button
+                type="button"
+                onClick={() => { setAllergyExpandedEvent(eventId); setAllergyText(""); }}
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                + Report Allergy
+              </button>
+            )}
+          </div>
+
+          {eventAllergies.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {eventAllergies.map((a) => (
+                <span
+                  key={a.id}
+                  className="inline-flex items-center text-xs bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full"
+                >
+                  <span className="font-medium">{a.family.parentName}:</span>
+                  <span className="ml-1">{a.allergies}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {eventAllergies.length === 0 && !isAllergyExpanded && (
+            <p className="text-xs text-muted">No allergies reported yet.</p>
+          )}
+
+          {isAllergyExpanded && (
+            <div className="bg-amber-50/50 border border-amber-200 rounded-lg p-3 mt-2">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+                  Report Allergy Info
+                </p>
+                <button type="button" onClick={() => setAllergyExpandedEvent(null)} className="text-muted hover:text-foreground p-1">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input label="Your Name" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Parent/Guardian name" required />
+                  <Input label="Phone Number" type="tel" value={familyPhone} onChange={(e) => setFamilyPhone(e.target.value)} placeholder="(555) 123-4567" required />
+                </div>
+                <Textarea
+                  label="Allergies"
+                  value={allergyText}
+                  onChange={(e) => setAllergyText(e.target.value)}
+                  placeholder="e.g. peanut allergy, gluten-free"
+                  rows={2}
+                />
+                <Button size="sm" onClick={() => handleSubmitAllergy(eventId)} disabled={allergySubmitting} className="w-full sm:w-auto">
+                  {allergySubmitting ? "Saving..." : "Submit Allergy Info"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-4">
@@ -307,190 +504,50 @@ function VolunteerContent() {
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
       ) : Object.keys(grouped).length === 0 ? (
         <p className="text-muted text-sm text-center py-8">No volunteer roles available right now.</p>
+      ) : upcomingEntries.length === 0 && pastEntries.length > 0 ? (
+        /* All events are in the past — show a message and the past toggle */
+        <div>
+          <p className="text-muted text-sm text-center py-8">No upcoming volunteer roles right now.</p>
+          {pastEntries.length > 0 && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setShowPast(!showPast)}
+                className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground font-medium mb-3"
+              >
+                {showPast ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                Past Events ({pastEntries.length})
+              </button>
+              {showPast && (
+                <div className="space-y-4 opacity-70">
+                  {pastEntries.map(([key, eventRoles]) => renderEventGroup(key, eventRoles))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
-          {Object.entries(grouped).map(([key, eventRoles]) => {
-            const [label, dateStr, eventId] = key.split("|||");
-            const eventAllergies = allergies[eventId] || [];
-            const isAllergyExpanded = allergyExpandedEvent === eventId;
+          {upcomingEntries.map(([key, eventRoles]) => renderEventGroup(key, eventRoles))}
 
-            return (
-              <div key={key} className="bg-surface border border-border rounded-lg overflow-hidden">
-                <div className="bg-gray-50 px-4 py-2 border-b border-border">
-                  <span className="font-semibold text-sm">{label}</span>
-                  <span className="text-xs text-muted ml-2">{formatDate(dateStr)}</span>
+          {/* Past Events — collapsed by default */}
+          {pastEntries.length > 0 && (
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => setShowPast(!showPast)}
+                className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground font-medium mb-3"
+              >
+                {showPast ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                Past Events ({pastEntries.length})
+              </button>
+              {showPast && (
+                <div className="space-y-4 opacity-70">
+                  {pastEntries.map(([key, eventRoles]) => renderEventGroup(key, eventRoles))}
                 </div>
-                <div className="divide-y divide-border">
-                  {eventRoles.map((role) => {
-                    const isFull = role.signups.length >= role.slotsNeeded;
-                    const isExpanded = signingUp === role.id;
-
-                    return (
-                      <div key={role.id}>
-                        {/* Role row */}
-                        <div
-                          className={`w-full text-left px-4 py-3 transition-colors ${
-                            isFull
-                              ? "opacity-70"
-                              : isCoach
-                                ? ""
-                                : isExpanded
-                                  ? "bg-primary/5"
-                                  : "hover:bg-gray-50 active:bg-gray-100"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <button
-                              type="button"
-                              onClick={() => !isFull && !isCoach && handleTapRole(role.id)}
-                              disabled={isFull || isCoach}
-                              className={`flex-1 min-w-0 text-left ${
-                                !isFull && !isCoach ? "cursor-pointer" : "cursor-default"
-                              }`}
-                            >
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">{role.name}</span>
-                                    {!isFull && !isExpanded && !isCoach && (
-                                      <UserPlus className="h-3.5 w-3.5 text-primary" />
-                                    )}
-                                  </div>
-                                  {role.description && (
-                                    <p className="text-xs text-muted">{role.description}</p>
-                                  )}
-                                </div>
-                                {isFull ? (
-                                  <Badge variant="success">
-                                    {role.signups.length}/{role.slotsNeeded} filled
-                                  </Badge>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 ring-1 ring-amber-300 animate-pulse">
-                                    {role.slotsNeeded - role.signups.length} spot{role.slotsNeeded - role.signups.length !== 1 ? "s" : ""} left!
-                                  </span>
-                                )}
-                              </div>
-                            </button>
-                            {isCoach && (
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteRole(role.id, role.name)}
-                                className="p-1.5 hover:bg-gray-100 rounded shrink-0"
-                                title="Delete role"
-                              >
-                                <Trash2 className="h-3.5 w-3.5 text-muted" />
-                              </button>
-                            )}
-                          </div>
-                          {role.signups.length > 0 && (
-                            <div className="mt-1.5 flex flex-wrap gap-1.5">
-                              {role.signups.map((s) => (
-                                <span
-                                  key={s.id}
-                                  className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
-                                >
-                                  {s.family.parentName}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Inline sign-up form (parents only) */}
-                        {isExpanded && !isCoach && (
-                          <div className="px-4 pb-4 bg-primary/5 border-t border-primary/20">
-                            <div className="pt-3 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-                                  Sign up for {role.name}
-                                </p>
-                                <button type="button" onClick={() => setSigningUp(null)} className="text-muted hover:text-foreground p-1">
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <Input label="Your Name" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Parent/Guardian name" required />
-                                <Input label="Phone Number" type="tel" value={familyPhone} onChange={(e) => setFamilyPhone(e.target.value)} placeholder="(555) 123-4567" required />
-                              </div>
-                              <Button size="sm" onClick={() => handleSignup(role.id)} disabled={submitting} className="w-full sm:w-auto">
-                                {submitting ? "Signing up..." : "Sign Up"}
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Allergies Section */}
-                <div className="border-t border-border px-4 py-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Allergies</span>
-                    </div>
-                    {!isAllergyExpanded && (
-                      <button
-                        type="button"
-                        onClick={() => { setAllergyExpandedEvent(eventId); setAllergyText(""); }}
-                        className="text-xs text-primary hover:underline font-medium"
-                      >
-                        + Report Allergy
-                      </button>
-                    )}
-                  </div>
-
-                  {eventAllergies.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {eventAllergies.map((a) => (
-                        <span
-                          key={a.id}
-                          className="inline-flex items-center text-xs bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full"
-                        >
-                          <span className="font-medium">{a.family.parentName}:</span>
-                          <span className="ml-1">{a.allergies}</span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {eventAllergies.length === 0 && !isAllergyExpanded && (
-                    <p className="text-xs text-muted">No allergies reported yet.</p>
-                  )}
-
-                  {isAllergyExpanded && (
-                    <div className="bg-amber-50/50 border border-amber-200 rounded-lg p-3 mt-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
-                          Report Allergy Info
-                        </p>
-                        <button type="button" onClick={() => setAllergyExpandedEvent(null)} className="text-muted hover:text-foreground p-1">
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <Input label="Your Name" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Parent/Guardian name" required />
-                          <Input label="Phone Number" type="tel" value={familyPhone} onChange={(e) => setFamilyPhone(e.target.value)} placeholder="(555) 123-4567" required />
-                        </div>
-                        <Textarea
-                          label="Allergies"
-                          value={allergyText}
-                          onChange={(e) => setAllergyText(e.target.value)}
-                          placeholder="e.g. peanut allergy, gluten-free"
-                          rows={2}
-                        />
-                        <Button size="sm" onClick={() => handleSubmitAllergy(eventId)} disabled={allergySubmitting} className="w-full sm:w-auto">
-                          {allergySubmitting ? "Saving..." : "Submit Allergy Info"}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
