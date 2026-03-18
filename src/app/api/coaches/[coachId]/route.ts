@@ -53,6 +53,7 @@ export async function PUT(
         ...(parsed.data.name !== undefined && { name: parsed.data.name }),
         ...(parsed.data.email !== undefined && { email: parsed.data.email }),
         ...(parsed.data.phone !== undefined && { phone: parsed.data.phone }),
+        ...(parsed.data.chatNotifyEmail !== undefined && { chatNotifyEmail: parsed.data.chatNotifyEmail }),
       },
       select: {
         id: true,
@@ -60,6 +61,7 @@ export async function PUT(
         email: true,
         role: true,
         phone: true,
+        chatNotifyEmail: true,
         createdAt: true,
       },
     });

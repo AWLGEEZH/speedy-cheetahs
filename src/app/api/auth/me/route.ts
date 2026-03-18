@@ -14,6 +14,7 @@ export async function GET() {
         email: true,
         role: true,
         phone: true,
+        chatNotifyEmail: true,
       },
     });
 

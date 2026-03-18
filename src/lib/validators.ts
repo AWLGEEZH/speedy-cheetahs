@@ -151,6 +151,7 @@ export const updateCoachSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   email: z.string().email().optional(),
   phone: z.string().max(20).optional().nullable(),
+  chatNotifyEmail: z.boolean().optional(),
 });
 
 export const changePasswordSchema = z.object({

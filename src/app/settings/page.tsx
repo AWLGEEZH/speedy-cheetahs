@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { UserCog, Plus, Trash2, Key, Shield, Edit2, RotateCcw } from "lucide-react";
+import { UserCog, Plus, Trash2, Key, Shield, Edit2, RotateCcw, Bell } from "lucide-react";
 
 interface Coach {
   id: string;
@@ -16,6 +16,7 @@ interface Coach {
   email: string;
   role: "HEAD" | "ASSISTANT";
   phone?: string | null;
+  chatNotifyEmail?: boolean;
 }
 
 function SettingsContent() {
@@ -304,7 +305,55 @@ function SettingsContent() {
           </CardContent>
         </Card>
 
-        {/* 2. Manage Coaches (HEAD only) */}
+        {/* 2. Notifications */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              <h3 className="font-semibold text-sm">Notifications</h3>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={currentCoach?.chatNotifyEmail ?? true}
+                onChange={async (e) => {
+                  const value = e.target.checked;
+                  // Optimistic update
+                  setCurrentCoach((prev) =>
+                    prev ? { ...prev, chatNotifyEmail: value } : prev
+                  );
+                  try {
+                    const res = await fetch(`/api/coaches/${currentCoach?.id}`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ chatNotifyEmail: value }),
+                    });
+                    if (!res.ok) {
+                      // Revert on failure
+                      setCurrentCoach((prev) =>
+                        prev ? { ...prev, chatNotifyEmail: !value } : prev
+                      );
+                      addToast("Failed to update notification preference", "error");
+                    }
+                  } catch {
+                    setCurrentCoach((prev) =>
+                      prev ? { ...prev, chatNotifyEmail: !value } : prev
+                    );
+                    addToast("Failed to update notification preference", "error");
+                  }
+                }}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <span className="text-sm">
+                Email me when a new chat message is posted
+              </span>
+            </label>
+          </CardContent>
+        </Card>
+
+        {/* 3. Manage Coaches (HEAD only) */}
         {currentCoach?.role === "HEAD" && (
           <Card>
             <CardHeader>
