@@ -34,14 +34,27 @@ enum CoachRole {
 }
 
 model Team {
-  id         String   @id @default(cuid())
-  name       String   @default("3D Printed Diamonds")
-  league     String   @default("Farm-1")
-  season     String
-  shareToken String   @unique @default(cuid())
-  rulesText  String?  @db.Text
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String   @default("3D Printed Diamonds")
+  league            String   @default("Farm-1")
+  season            String
+  shareToken        String   @unique @default(cuid())
+  registrationCode  String?
+  rulesText         String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model VerificationPin {
+  id        String   @id @default(cuid())
+  phone     String
+  pinHash   String
+  familyId  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone])
 }
 
 // ─── PLAYERS & FAMILIES ────────────────────────────────

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast, ToastProvider } from "@/components/ui/toast";
-import { UserCog, Plus, Trash2, Key, Shield, Edit2, RotateCcw, Bell } from "lucide-react";
+import { UserCog, Plus, Trash2, Key, Shield, Edit2, RotateCcw, Bell, Lock } from "lucide-react";
 
 interface Coach {
   id: string;
@@ -49,6 +49,11 @@ function SettingsContent() {
   const [resetConfirm, setResetConfirm] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
 
+  // Registration code
+  const [registrationCode, setRegistrationCode] = useState("");
+  const [savedCode, setSavedCode] = useState<string | null>(null);
+  const [savingCode, setSavingCode] = useState(false);
+
   const { addToast } = useToast();
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -57,10 +62,15 @@ function SettingsContent() {
     Promise.all([
       fetch("/api/auth/me").then((r) => r.json()),
       fetch("/api/coaches").then((r) => r.json()),
+      fetch("/api/team").then((r) => r.json()),
     ])
-      .then(([me, coachList]) => {
+      .then(([me, coachList, team]) => {
         setCurrentCoach(me);
         setCoaches(Array.isArray(coachList) ? coachList : []);
+        if (team?.registrationCode) {
+          setRegistrationCode(team.registrationCode);
+          setSavedCode(team.registrationCode);
+        }
       })
       .catch(() => {
         addToast("Failed to load settings data", "error");
@@ -250,6 +260,39 @@ function SettingsContent() {
     }
   }
 
+  async function handleSaveRegistrationCode(e: React.FormEvent) {
+    e.preventDefault();
+    const codeValue = registrationCode.trim() || null;
+    if (codeValue && (codeValue.length < 4 || !/^[a-zA-Z0-9]+$/.test(codeValue))) {
+      addToast("Code must be at least 4 characters, letters and numbers only", "error");
+      return;
+    }
+    setSavingCode(true);
+    try {
+      const res = await fetch("/api/team", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registrationCode: codeValue }),
+      });
+      if (res.ok) {
+        setSavedCode(codeValue);
+        addToast(
+          codeValue
+            ? "Registration code updated"
+            : "Registration code removed — registration is now open",
+          "success"
+        );
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to update registration code", "error");
+      }
+    } catch {
+      addToast("Failed to update registration code", "error");
+    } finally {
+      setSavingCode(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-6">
@@ -353,7 +396,63 @@ function SettingsContent() {
           </CardContent>
         </Card>
 
-        {/* 3. Manage Coaches (HEAD only) */}
+        {/* 3. Registration Security (HEAD only) */}
+        {currentCoach?.role === "HEAD" && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                <div>
+                  <h3 className="font-semibold text-sm">Registration Security</h3>
+                  <p className="text-xs text-muted">
+                    Require an invite code to access the registration page
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSaveRegistrationCode} className="space-y-3 max-w-md">
+                <div>
+                  <Input
+                    label="Invite Code"
+                    value={registrationCode}
+                    onChange={(e) => setRegistrationCode(e.target.value)}
+                    placeholder="e.g. DIAMONDS2026"
+                    maxLength={30}
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    {savedCode
+                      ? `Current code: ${savedCode}`
+                      : "No code set — registration is currently open to anyone with the link"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button type="submit" size="sm" disabled={savingCode}>
+                    {savingCode ? "Saving..." : "Save Code"}
+                  </Button>
+                  {savedCode && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setRegistrationCode("");
+                      }}
+                    >
+                      Clear Code
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted">
+                  Share this code with parents so they can register. Letters and numbers only,
+                  minimum 4 characters. Clear the code to allow open registration.
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 4. Manage Coaches (HEAD only) */}
         {currentCoach?.role === "HEAD" && (
           <Card>
             <CardHeader>

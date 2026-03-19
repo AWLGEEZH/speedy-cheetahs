@@ -7,18 +7,15 @@ export async function GET() {
       where: {
         players: { some: {} },
       },
-      include: {
+      select: {
+        id: true,
         players: {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
             jerseyNumber: true,
           },
           orderBy: { firstName: "asc" },
-        },
-        contacts: {
-          orderBy: { createdAt: "asc" },
         },
       },
       orderBy: { parentName: "asc" },

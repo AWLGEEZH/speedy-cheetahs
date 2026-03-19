@@ -203,3 +203,32 @@ export const eventAllergySchema = z.object({
   familyId: z.string(),
   allergies: z.string().min(1).max(500),
 });
+
+// ─── REGISTRATION SECURITY ─────────────────────────────
+
+export const updateTeamSettingsSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  rulesText: z.string().max(50000).optional(),
+  registrationCode: z
+    .string()
+    .min(4)
+    .max(30)
+    .regex(/^[a-zA-Z0-9]+$/, "Code must be letters and numbers only")
+    .nullable()
+    .optional(),
+});
+
+export const verifyCodeSchema = z.object({
+  code: z.string().min(1),
+});
+
+export const verifyPhoneSchema = z.object({
+  phone: z.string().min(10).max(20),
+  familyId: z.string().min(1),
+});
+
+export const confirmPinSchema = z.object({
+  phone: z.string().min(10).max(20),
+  pin: z.string().length(6).regex(/^\d{6}$/, "PIN must be 6 digits"),
+  familyId: z.string().min(1),
+});

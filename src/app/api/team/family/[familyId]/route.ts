@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { publicFamilyUpdateSchema } from "@/lib/validators";
 import { normalizePhone } from "@/lib/utils";
+import { requireFamilyOrCoachAuth } from "@/lib/family-auth";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ familyId: string }> }
 ) {
   try {
     const { familyId } = await params;
+    await requireFamilyOrCoachAuth(request, familyId);
+
     const family = await prisma.family.findUnique({
       where: { id: familyId },
       include: {
@@ -31,7 +34,10 @@ export async function GET(
     }
 
     return NextResponse.json(family);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to fetch family" },
       { status: 500 }
@@ -45,6 +51,8 @@ export async function PUT(
 ) {
   try {
     const { familyId } = await params;
+    await requireFamilyOrCoachAuth(request, familyId);
+
     const body = await request.json();
     const parsed = publicFamilyUpdateSchema.safeParse(body);
 
@@ -98,7 +106,10 @@ export async function PUT(
     });
 
     return NextResponse.json(family);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to update family" },
       { status: 500 }

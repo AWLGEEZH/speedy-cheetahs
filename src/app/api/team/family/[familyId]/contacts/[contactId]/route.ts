@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireFamilyOrCoachAuth } from "@/lib/family-auth";
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   {
     params,
   }: { params: Promise<{ familyId: string; contactId: string }> }
 ) {
   try {
     const { familyId, contactId } = await params;
+    await requireFamilyOrCoachAuth(request, familyId);
 
     const contact = await prisma.contact.findUnique({
       where: { id: contactId },
@@ -33,7 +35,10 @@ export async function DELETE(
     });
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to delete contact" },
       { status: 500 }
