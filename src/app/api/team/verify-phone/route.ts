@@ -19,13 +19,30 @@ export async function POST(request: Request) {
 
     const normalized = normalizePhone(parsed.data.phone);
 
-    // Verify this phone belongs to the family
+    // Verify this phone belongs to the family (primary or additional contact)
     const family = await prisma.family.findUnique({
       where: { id: parsed.data.familyId },
-      select: { phone: true },
+      select: {
+        phone: true,
+        contacts: { select: { phone: true } },
+      },
     });
 
-    if (!family || normalizePhone(family.phone) !== normalized) {
+    if (!family) {
+      return NextResponse.json(
+        { error: "Phone number does not match this family" },
+        { status: 400 }
+      );
+    }
+
+    const familyPhones = [
+      normalizePhone(family.phone),
+      ...family.contacts
+        .filter((c) => c.phone)
+        .map((c) => normalizePhone(c.phone!)),
+    ];
+
+    if (!familyPhones.includes(normalized)) {
       return NextResponse.json(
         { error: "Phone number does not match this family" },
         { status: 400 }
