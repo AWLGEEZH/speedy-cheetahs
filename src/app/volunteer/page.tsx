@@ -239,16 +239,19 @@ function VolunteerContent() {
     return acc;
   }, {});
 
-  // Split into upcoming and past event groups
+  // Split into upcoming and past event groups, sorted by event date
   const now = new Date();
-  const upcomingEntries = Object.entries(grouped).filter(([key]) => {
-    const dateStr = key.split("|||")[1];
-    return new Date(dateStr) >= now;
-  });
-  const pastEntries = Object.entries(grouped).filter(([key]) => {
-    const dateStr = key.split("|||")[1];
-    return new Date(dateStr) < now;
-  });
+  const sortByDate = (a: [string, VolunteerRole[]], b: [string, VolunteerRole[]]) => {
+    const dateA = new Date(a[0].split("|||")[1]);
+    const dateB = new Date(b[0].split("|||")[1]);
+    return dateA.getTime() - dateB.getTime();
+  };
+  const upcomingEntries = Object.entries(grouped)
+    .filter(([key]) => new Date(key.split("|||")[1]) >= now)
+    .sort(sortByDate);
+  const pastEntries = Object.entries(grouped)
+    .filter(([key]) => new Date(key.split("|||")[1]) < now)
+    .sort(sortByDate);
 
   function renderEventGroup(key: string, eventRoles: VolunteerRole[]) {
     const [label, dateStr, eventId] = key.split("|||");
