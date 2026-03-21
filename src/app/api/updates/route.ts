@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { postUpdateSchema } from "@/lib/validators";
 import { sendBulkSms } from "@/lib/twilio";
 import { sendBulkEmail } from "@/lib/email";
+import { normalizePhone } from "@/lib/utils";
 
 export async function GET() {
   try {
@@ -47,13 +48,14 @@ export async function POST(request: Request) {
           where: { smsOptIn: true },
           select: { phone: true, contacts: { select: { phone: true } } },
         });
-        const phones: string[] = [];
+        const phoneSet = new Set<string>();
         for (const f of families) {
-          phones.push(f.phone);
+          phoneSet.add(normalizePhone(f.phone));
           for (const c of f.contacts) {
-            if (c.phone) phones.push(c.phone);
+            if (c.phone) phoneSet.add(normalizePhone(c.phone));
           }
         }
+        const phones = [...phoneSet];
         if (phones.length > 0) {
           const result = await sendBulkSms(
             phones,
@@ -74,13 +76,14 @@ export async function POST(request: Request) {
           where: { emailOptIn: true, email: { not: null }, NOT: { email: "" } },
           select: { email: true, contacts: { select: { email: true } } },
         });
-        const emails: string[] = [];
+        const emailSet = new Set<string>();
         for (const f of families) {
-          if (f.email) emails.push(f.email);
+          if (f.email) emailSet.add(f.email.toLowerCase().trim());
           for (const c of f.contacts) {
-            if (c.email) emails.push(c.email);
+            if (c.email) emailSet.add(c.email.toLowerCase().trim());
           }
         }
+        const emails = [...emailSet];
         if (emails.length > 0) {
           const result = await sendBulkEmail(
             emails,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createContactSchema } from "@/lib/validators";
 import { requireFamilyOrCoachAuth } from "@/lib/family-auth";
+import { normalizePhone } from "@/lib/utils";
 
 export async function POST(
   request: Request,
@@ -33,7 +34,7 @@ export async function POST(
       data: {
         name: parsed.data.name,
         email: parsed.data.email || null,
-        phone: parsed.data.phone || null,
+        phone: parsed.data.phone ? normalizePhone(parsed.data.phone) : null,
         relationship: parsed.data.relationship || null,
         familyId,
       },

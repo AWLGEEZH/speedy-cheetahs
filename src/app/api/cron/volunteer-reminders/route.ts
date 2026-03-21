@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendBulkSms } from "@/lib/twilio";
 import { sendBulkEmail } from "@/lib/email";
+import { normalizePhone } from "@/lib/utils";
 import { format } from "date-fns";
 
 /**
@@ -60,23 +61,26 @@ export async function GET(request: Request) {
       const message = `Reminder: You're volunteering as ${role.name} tomorrow (${eventDate}) at ${eventTime} at ${event.locationName}. Thank you!`;
 
       try {
-        // Collect all phones (primary + additional contacts)
+        // Collect all phones (primary + additional contacts), deduplicated
         if (family.smsOptIn) {
-          const phones: string[] = [family.phone];
+          const phoneSet = new Set<string>();
+          phoneSet.add(normalizePhone(family.phone));
           for (const c of family.contacts) {
-            if (c.phone) phones.push(c.phone);
+            if (c.phone) phoneSet.add(normalizePhone(c.phone));
           }
+          const phones = [...phoneSet];
           await sendBulkSms(phones, message);
           results.reminders24h.sms += phones.length;
         }
 
-        // Collect all emails (primary + additional contacts)
+        // Collect all emails (primary + additional contacts), deduplicated
         if (family.emailOptIn) {
-          const emails: string[] = [];
-          if (family.email) emails.push(family.email);
+          const emailSet = new Set<string>();
+          if (family.email) emailSet.add(family.email.toLowerCase().trim());
           for (const c of family.contacts) {
-            if (c.email) emails.push(c.email);
+            if (c.email) emailSet.add(c.email.toLowerCase().trim());
           }
+          const emails = [...emailSet];
           if (emails.length > 0) {
             await sendBulkEmail(emails, "Volunteer Reminder — Tomorrow", message);
             results.reminders24h.email += emails.length;
@@ -126,23 +130,26 @@ export async function GET(request: Request) {
       const message = `Heads up! You're volunteering as ${role.name} in 90 minutes (${eventTime}) at ${event.locationName}. See you there!`;
 
       try {
-        // Collect all phones (primary + additional contacts)
+        // Collect all phones (primary + additional contacts), deduplicated
         if (family.smsOptIn) {
-          const phones: string[] = [family.phone];
+          const phoneSet = new Set<string>();
+          phoneSet.add(normalizePhone(family.phone));
           for (const c of family.contacts) {
-            if (c.phone) phones.push(c.phone);
+            if (c.phone) phoneSet.add(normalizePhone(c.phone));
           }
+          const phones = [...phoneSet];
           await sendBulkSms(phones, message);
           results.reminders90m.sms += phones.length;
         }
 
-        // Collect all emails (primary + additional contacts)
+        // Collect all emails (primary + additional contacts), deduplicated
         if (family.emailOptIn) {
-          const emails: string[] = [];
-          if (family.email) emails.push(family.email);
+          const emailSet = new Set<string>();
+          if (family.email) emailSet.add(family.email.toLowerCase().trim());
           for (const c of family.contacts) {
-            if (c.email) emails.push(c.email);
+            if (c.email) emailSet.add(c.email.toLowerCase().trim());
           }
+          const emails = [...emailSet];
           if (emails.length > 0) {
             await sendBulkEmail(emails, "Volunteer Reminder — Starting Soon", message);
             results.reminders90m.email += emails.length;
