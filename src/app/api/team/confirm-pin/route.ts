@@ -3,10 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { confirmPinSchema } from "@/lib/validators";
 import { normalizePhone } from "@/lib/utils";
 import { createFamilyToken } from "@/lib/family-auth";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const { success } = rateLimit(`confirm-pin:${ip}`, 10, 15 * 60 * 1000);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const parsed = confirmPinSchema.safeParse(body);
 

@@ -3,10 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { verifyPhoneSchema } from "@/lib/validators";
 import { normalizePhone } from "@/lib/utils";
 import { sendSingleSms } from "@/lib/twilio";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const { success } = rateLimit(`verify-phone:${ip}`, 5, 15 * 60 * 1000);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const parsed = verifyPhoneSchema.safeParse(body);
 

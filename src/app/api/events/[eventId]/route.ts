@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, getSession } from "@/lib/auth";
 import { updateEventSchema } from "@/lib/validators";
 
 export async function GET(
@@ -9,16 +9,39 @@ export async function GET(
 ) {
   try {
     const { eventId } = await params;
+
+    // Check if caller is an authenticated coach
+    const session = await getSession();
+
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       include: {
         volunteerRoles: {
           include: {
-            signups: { include: { family: { select: { id: true, parentName: true } } } },
+            signups: {
+              include: {
+                family: {
+                  select: {
+                    id: true,
+                    // Only expose parentName to authenticated coaches
+                    ...(session ? { parentName: true } : {}),
+                  },
+                },
+              },
+            },
           },
         },
         attendanceRsvps: {
-          include: { player: true, family: { select: { parentName: true } } },
+          include: {
+            player: true,
+            family: {
+              select: {
+                id: true,
+                // Only expose parentName to authenticated coaches
+                ...(session ? { parentName: true } : {}),
+              },
+            },
+          },
         },
         gameState: true,
       },

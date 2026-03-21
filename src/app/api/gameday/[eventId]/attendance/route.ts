@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 import { attendanceRsvpSchema } from "@/lib/validators";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(
   _request: Request,
@@ -8,11 +10,21 @@ export async function GET(
 ) {
   try {
     const { eventId } = await params;
+
+    // Check if caller is an authenticated coach
+    const session = await getSession();
+
     const rsvps = await prisma.attendanceRsvp.findMany({
       where: { eventId },
       include: {
         player: { select: { id: true, firstName: true, lastName: true, jerseyNumber: true } },
-        family: { select: { id: true, parentName: true } },
+        family: {
+          select: {
+            id: true,
+            // Only expose parentName to authenticated coaches
+            ...(session ? { parentName: true } : {}),
+          },
+        },
       },
       orderBy: { player: { lastName: "asc" } },
     });
@@ -27,12 +39,28 @@ export async function POST(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    const ip = getClientIp(request);
+    const { success } = rateLimit(`attendance-rsvp:${ip}`, 20, 15 * 60 * 1000);
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const { eventId } = await params;
     const body = await request.json();
     const parsed = attendanceRsvpSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+
+    // Verify the player belongs to the specified family
+    const player = await prisma.player.findUnique({
+      where: { id: parsed.data.playerId },
+      select: { familyId: true },
+    });
+
+    if (!player || player.familyId !== parsed.data.familyId) {
+      return NextResponse.json({ error: "Player does not belong to this family" }, { status: 400 });
     }
 
     const rsvp = await prisma.attendanceRsvp.upsert({
