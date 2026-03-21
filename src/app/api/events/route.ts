@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, getSession } from "@/lib/auth";
 import { createEventSchema } from "@/lib/validators";
 
 export async function GET(request: Request) {
@@ -8,6 +8,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
     const upcoming = searchParams.get("upcoming");
+
+    // Check if caller is an authenticated coach
+    const session = await getSession();
 
     const where: Record<string, unknown> = {};
     if (type) where.type = type;
@@ -22,7 +25,17 @@ export async function GET(request: Request) {
       include: {
         volunteerRoles: {
           include: {
-            signups: { include: { family: { select: { id: true, parentName: true } } } },
+            signups: {
+              include: {
+                family: {
+                  select: {
+                    id: true,
+                    // Only expose parentName to authenticated coaches
+                    ...(session ? { parentName: true } : {}),
+                  },
+                },
+              },
+            },
           },
         },
         coachRsvps: {

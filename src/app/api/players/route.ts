@@ -5,12 +5,16 @@ import { createPlayerSchema } from "@/lib/validators";
 
 export async function GET() {
   try {
+    await requireAuth();
     const players = await prisma.player.findMany({
       include: { family: { select: { id: true, parentName: true, email: true, phone: true } } },
       orderBy: { lastName: "asc" },
     });
     return NextResponse.json(players);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch players" }, { status: 500 });
   }
 }

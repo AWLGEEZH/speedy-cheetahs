@@ -11,10 +11,67 @@ export function stripHtml(html: string): string {
   return text;
 }
 
+/** Validate that a URL is safe to fetch (no SSRF) */
+function validateUrl(urlString: string): void {
+  let url: URL;
+  try {
+    url = new URL(urlString);
+  } catch {
+    throw new Error("Invalid URL");
+  }
+
+  // Only allow http/https
+  if (!["http:", "https:"].includes(url.protocol)) {
+    throw new Error("Only HTTP and HTTPS URLs are allowed");
+  }
+
+  const hostname = url.hostname.toLowerCase();
+
+  // Block localhost and loopback
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]" ||
+    hostname === "0.0.0.0"
+  ) {
+    throw new Error("Local addresses are not allowed");
+  }
+
+  // Block private IP ranges
+  const parts = hostname.split(".").map(Number);
+  if (parts.length === 4 && parts.every((p) => !isNaN(p))) {
+    const [a, b] = parts;
+    if (
+      a === 10 ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a === 0
+    ) {
+      throw new Error("Private IP addresses are not allowed");
+    }
+    // Block AWS/cloud metadata endpoint
+    if (hostname === "169.254.169.254") {
+      throw new Error("Metadata endpoints are not allowed");
+    }
+  }
+
+  // Block common cloud metadata hostnames
+  if (
+    hostname === "metadata.google.internal" ||
+    hostname === "metadata.google.com"
+  ) {
+    throw new Error("Metadata endpoints are not allowed");
+  }
+}
+
 export async function extractTextFromUrl(url: string): Promise<string> {
+  validateUrl(url);
+
   const response = await fetch(url, {
     headers: { "User-Agent": "3DPDiamonds-Bot/1.0" },
     signal: AbortSignal.timeout(15000),
+    redirect: "error", // Don't follow redirects that could lead to internal resources
   });
   if (!response.ok) {
     throw new Error(`Failed to fetch URL: ${response.status}`);

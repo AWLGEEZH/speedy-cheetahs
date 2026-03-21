@@ -8,6 +8,9 @@ if (!process.env.AUTH_SECRET) {
 }
 const JWT_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 
+/** Track used reset tokens to prevent reuse (auto-cleaned after 15min) */
+const usedResetTokens = new Set<string>();
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
@@ -76,8 +79,10 @@ export async function clearSession(): Promise<void> {
 }
 
 export async function createResetToken(coachId: string): Promise<string> {
+  const jti = crypto.randomUUID();
   return new SignJWT({ coachId, purpose: "password-reset" })
     .setProtectedHeader({ alg: "HS256" })
+    .setJti(jti)
     .setExpirationTime("15m")
     .sign(JWT_SECRET);
 }
@@ -86,8 +91,26 @@ export async function verifyResetToken(token: string): Promise<{ coachId: string
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     if (payload.purpose !== "password-reset") return null;
+    // Reject already-used tokens
+    if (payload.jti && usedResetTokens.has(payload.jti)) return null;
     return { coachId: payload.coachId as string };
   } catch {
     return null;
+  }
+}
+
+/** Mark a reset token as used so it cannot be reused */
+export function invalidateResetToken(token: string): void {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return;
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
+    if (payload.jti) {
+      usedResetTokens.add(payload.jti);
+      // Auto-cleanup after 15 minutes (token's max lifetime)
+      setTimeout(() => usedResetTokens.delete(payload.jti), 15 * 60 * 1000).unref?.();
+    }
+  } catch {
+    // Ignore parse errors
   }
 }

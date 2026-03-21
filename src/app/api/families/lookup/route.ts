@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 import { normalizePhone } from "@/lib/utils";
 
 export async function GET(request: Request) {
   try {
+    await requireAuth();
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get("phone");
 
@@ -56,7 +58,10 @@ export async function GET(request: Request) {
       parentName: family.parentName,
       players: family.players,
     });
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Lookup failed" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyResetToken, hashPassword } from "@/lib/auth";
+import { verifyResetToken, hashPassword, invalidateResetToken } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -45,6 +45,9 @@ export async function POST(request: Request) {
       where: { id: coach.id },
       data: { passwordHash },
     });
+
+    // Invalidate the token so it cannot be reused
+    invalidateResetToken(token);
 
     return NextResponse.json({ ok: true, name: coach.name });
   } catch {

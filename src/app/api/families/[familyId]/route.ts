@@ -9,6 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ familyId: string }> }
 ) {
   try {
+    await requireAuth();
     const { familyId } = await params;
     const family = await prisma.family.findUnique({
       where: { id: familyId },
@@ -18,7 +19,10 @@ export async function GET(
       return NextResponse.json({ error: "Family not found" }, { status: 404 });
     }
     return NextResponse.json(family);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch family" }, { status: 500 });
   }
 }

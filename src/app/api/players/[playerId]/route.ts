@@ -8,6 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ playerId: string }> }
 ) {
   try {
+    await requireAuth();
     const { playerId } = await params;
     const player = await prisma.player.findUnique({
       where: { id: playerId },
@@ -17,7 +18,10 @@ export async function GET(
       return NextResponse.json({ error: "Player not found" }, { status: 404 });
     }
     return NextResponse.json(player);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch player" }, { status: 500 });
   }
 }

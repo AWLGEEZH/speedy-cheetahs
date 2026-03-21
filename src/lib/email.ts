@@ -16,6 +16,16 @@ function getTransporter() {
   });
 }
 
+/** Escape HTML special characters to prevent injection */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export async function sendBulkEmail(
   emails: string[],
   subject: string,
@@ -23,6 +33,8 @@ export async function sendBulkEmail(
 ): Promise<{ sent: number; failed: number }> {
   const transporter = getTransporter();
   const from = `"3D Printed Diamonds" <${process.env.SMTP_USER}>`;
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message);
 
   const results = await Promise.allSettled(
     emails.map((to) =>
@@ -34,11 +46,11 @@ export async function sendBulkEmail(
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #1a365d; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
-              <h2 style="margin: 0; font-size: 18px;">💎 3D Printed Diamonds</h2>
+              <h2 style="margin: 0; font-size: 18px;">&#x1F48E; 3D Printed Diamonds</h2>
             </div>
             <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
-              <h3 style="margin: 0 0 12px 0; color: #1a365d;">${subject}</h3>
-              <p style="margin: 0; color: #4a5568; line-height: 1.6; white-space: pre-wrap;">${message}</p>
+              <h3 style="margin: 0 0 12px 0; color: #1a365d;">${safeSubject}</h3>
+              <p style="margin: 0; color: #4a5568; line-height: 1.6; white-space: pre-wrap;">${safeMessage}</p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px;" />
               <p style="font-size: 12px; color: #a0aec0; margin: 0;">
                 3D Printed Diamonds Farm-1<br/>
@@ -65,6 +77,7 @@ export async function sendSingleEmail(
 ): Promise<{ messageId: string }> {
   const transporter = getTransporter();
   const from = `"3D Printed Diamonds" <${process.env.SMTP_USER}>`;
+  const safeMessage = escapeHtml(message);
 
   const info = await transporter.sendMail({
     from,
@@ -74,10 +87,10 @@ export async function sendSingleEmail(
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #1a365d; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
-          <h2 style="margin: 0; font-size: 18px;">💎 3D Printed Diamonds</h2>
+          <h2 style="margin: 0; font-size: 18px;">&#x1F48E; 3D Printed Diamonds</h2>
         </div>
         <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
-          <p style="margin: 0; color: #4a5568; line-height: 1.6; white-space: pre-wrap;">${message}</p>
+          <p style="margin: 0; color: #4a5568; line-height: 1.6; white-space: pre-wrap;">${safeMessage}</p>
         </div>
       </div>
     `,

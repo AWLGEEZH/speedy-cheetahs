@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 import { volunteerSignupSchema } from "@/lib/validators";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
   try {
+    await requireAuth();
     const { searchParams } = new URL(request.url);
     const eventId = searchParams.get("eventId");
 
@@ -18,13 +21,22 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(signups);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch signups" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const { success } = rateLimit(`volunteer-signup:${ip}`, 10, 15 * 60 * 1000);
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const body = await request.json();
     const parsed = volunteerSignupSchema.safeParse(body);
 
