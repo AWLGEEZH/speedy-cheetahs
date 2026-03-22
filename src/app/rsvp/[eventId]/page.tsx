@@ -95,8 +95,11 @@ function AttendanceContent() {
         const data: FamilyLookup = await res.json();
         setFamily(data);
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone: trimmed }));
+      } else if (res.status === 429) {
+        setLookupError("Too many attempts. Please wait a few minutes and try again.");
+        setFamily(null);
       } else {
-        setLookupError("No family found with that phone number.");
+        setLookupError("No family found with that phone number. Try the number you registered with.");
         setFamily(null);
       }
     } catch {

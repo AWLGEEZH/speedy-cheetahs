@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
 import { normalizePhone } from "@/lib/utils";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
   try {
-    await requireAuth();
+    const ip = getClientIp(request);
+    const { success } = rateLimit(`family-lookup:${ip}`, 10, 15 * 60 * 1000);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get("phone");
 
@@ -58,10 +66,7 @@ export async function GET(request: Request) {
       parentName: family.parentName,
       players: family.players,
     });
-  } catch (e) {
-    if (e instanceof Error && e.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  } catch {
     return NextResponse.json({ error: "Lookup failed" }, { status: 500 });
   }
 }
