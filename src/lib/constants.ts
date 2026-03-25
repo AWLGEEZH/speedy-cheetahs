@@ -8,7 +8,6 @@ export const FIELD_POSITIONS = [
   { value: "LEFT_FIELD", label: "Left Field", short: "LF" },
   { value: "CENTER_FIELD", label: "Center Field", short: "CF" },
   { value: "RIGHT_FIELD", label: "Right Field", short: "RF" },
-  { value: "LEFT_CENTER", label: "Left Center", short: "LC" },
   { value: "RIGHT_CENTER", label: "Right Center", short: "RC" },
   { value: "BENCH", label: "Bench", short: "BN" },
 ] as const;
@@ -32,7 +31,7 @@ export const VOLUNTEER_ROLE_TEMPLATES = [
   "Photo/Video",
 ] as const;
 
-export const OUTS_PER_INNING = 6;
+export const OUTS_PER_INNING = 3;
 
 export const TEAM_NAME = "3D Printed Diamonds";
 export const LEAGUE_NAME = "Farm-1";

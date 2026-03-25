@@ -12,7 +12,6 @@ export type FieldPosition =
   | "LEFT_FIELD"
   | "CENTER_FIELD"
   | "RIGHT_FIELD"
-  | "LEFT_CENTER"
   | "RIGHT_CENTER"
   | "BENCH";
 
