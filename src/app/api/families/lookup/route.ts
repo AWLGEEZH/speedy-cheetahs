@@ -31,17 +31,19 @@ export async function GET(request: Request) {
       familyId: true,
     } as const;
 
-    // Search primary family phone first
-    let family = await prisma.family.findFirst({
+    // Search primary family phone — find all matches and prefer the one with players
+    const families = await prisma.family.findMany({
       where: { phone: normalized },
       include: {
         players: { select: playerSelect, orderBy: { firstName: "asc" } },
       },
     });
 
+    let family = families.find((f) => f.players.length > 0) ?? families[0] ?? null;
+
     // If not found, search additional contacts' phone numbers
     if (!family) {
-      const contact = await prisma.contact.findFirst({
+      const contacts = await prisma.contact.findMany({
         where: { phone: normalized },
         include: {
           family: {
@@ -52,8 +54,9 @@ export async function GET(request: Request) {
         },
       });
 
-      if (contact) {
-        family = contact.family;
+      const match = contacts.find((ct) => ct.family.players.length > 0) ?? contacts[0];
+      if (match) {
+        family = match.family;
       }
     }
 
