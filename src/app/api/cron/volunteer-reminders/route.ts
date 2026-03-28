@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendBulkSms } from "@/lib/twilio";
 import { sendBulkEmail } from "@/lib/email";
-import { normalizePhone } from "@/lib/utils";
-import { format } from "date-fns";
+import { normalizePhone, formatTime, formatDate } from "@/lib/utils";
 
 /**
  * GET /api/cron/volunteer-reminders?secret=xxx
@@ -12,6 +11,9 @@ import { format } from "date-fns";
  * Sends two types of reminders to volunteers:
  *   - 24 hours before the event
  *   - 90 minutes before the event
+ *
+ * Groups signups by family+event so a family signed up for multiple
+ * roles at the same event only receives ONE reminder listing all roles.
  */
 export async function GET(request: Request) {
   // Verify cron secret
@@ -52,13 +54,23 @@ export async function GET(request: Request) {
       },
     });
 
+    // Group signups by family+event to send one message per family per event
+    const grouped24h = new Map<string, typeof signups24h>();
     for (const signup of signups24h) {
-      const { family, role } = signup;
-      const event = role.event;
-      const eventTime = format(new Date(event.date), "h:mm a");
-      const eventDate = format(new Date(event.date), "EEEE, MMM d");
+      const key = `${signup.familyId}:${signup.role.event.id}`;
+      const group = grouped24h.get(key) ?? [];
+      group.push(signup);
+      grouped24h.set(key, group);
+    }
 
-      const message = `Reminder: You're volunteering as ${role.name} tomorrow (${eventDate}) at ${eventTime} at ${event.locationName}. Thank you!`;
+    for (const [, groupSignups] of grouped24h) {
+      const { family } = groupSignups[0];
+      const event = groupSignups[0].role.event;
+      const roleNames = groupSignups.map((s) => s.role.name).join(" and ");
+      const eventTime = formatTime(event.date);
+      const eventDate = formatDate(event.date);
+
+      const message = `Reminder: You're volunteering as ${roleNames} tomorrow (${eventDate}) at ${eventTime} at ${event.locationName}. Thank you!`;
 
       try {
         // Collect all phones (primary + additional contacts), deduplicated
@@ -87,13 +99,13 @@ export async function GET(request: Request) {
           }
         }
 
-        // Mark as sent
-        await prisma.volunteerSignup.update({
-          where: { id: signup.id },
+        // Mark ALL signups in this group as sent
+        await prisma.volunteerSignup.updateMany({
+          where: { id: { in: groupSignups.map((s) => s.id) } },
           data: { reminder24hSent: true },
         });
       } catch (err) {
-        results.errors.push(`24h reminder failed for signup ${signup.id}: ${err instanceof Error ? err.message : "Unknown error"}`);
+        results.errors.push(`24h reminder failed for family ${family.id}: ${err instanceof Error ? err.message : "Unknown error"}`);
       }
     }
 
@@ -122,12 +134,22 @@ export async function GET(request: Request) {
       },
     });
 
+    // Group signups by family+event to send one message per family per event
+    const grouped90m = new Map<string, typeof signups90m>();
     for (const signup of signups90m) {
-      const { family, role } = signup;
-      const event = role.event;
-      const eventTime = format(new Date(event.date), "h:mm a");
+      const key = `${signup.familyId}:${signup.role.event.id}`;
+      const group = grouped90m.get(key) ?? [];
+      group.push(signup);
+      grouped90m.set(key, group);
+    }
 
-      const message = `Heads up! You're volunteering as ${role.name} in 90 minutes (${eventTime}) at ${event.locationName}. See you there!`;
+    for (const [, groupSignups] of grouped90m) {
+      const { family } = groupSignups[0];
+      const event = groupSignups[0].role.event;
+      const roleNames = groupSignups.map((s) => s.role.name).join(" and ");
+      const eventTime = formatTime(event.date);
+
+      const message = `Heads up! You're volunteering as ${roleNames} in 90 minutes (${eventTime}) at ${event.locationName}. See you there!`;
 
       try {
         // Collect all phones (primary + additional contacts), deduplicated
@@ -156,13 +178,13 @@ export async function GET(request: Request) {
           }
         }
 
-        // Mark as sent
-        await prisma.volunteerSignup.update({
-          where: { id: signup.id },
+        // Mark ALL signups in this group as sent
+        await prisma.volunteerSignup.updateMany({
+          where: { id: { in: groupSignups.map((s) => s.id) } },
           data: { reminder90mSent: true },
         });
       } catch (err) {
-        results.errors.push(`90m reminder failed for signup ${signup.id}: ${err instanceof Error ? err.message : "Unknown error"}`);
+        results.errors.push(`90m reminder failed for family ${family.id}: ${err instanceof Error ? err.message : "Unknown error"}`);
       }
     }
   } catch (err) {
