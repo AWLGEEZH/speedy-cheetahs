@@ -13,7 +13,7 @@ import { usePolling } from "@/hooks/use-polling";
 import { cn, formatDateTime } from "@/lib/utils";
 import { FIELD_POSITIONS, OUTS_PER_INNING } from "@/lib/constants";
 import type { PlayerWithFamily, BattingEntryWithPlayer, FieldingEntryWithPlayer } from "@/types";
-import { Users, ListOrdered, Diamond, ChevronRight, Undo2, Plus, CircleDot, Wand2 } from "lucide-react";
+import { Users, ListOrdered, Diamond, ChevronRight, Undo2, Plus, CircleDot, Wand2, RotateCcw } from "lucide-react";
 
 type Tab = "attendance" | "batting" | "fielding";
 
@@ -195,6 +195,22 @@ function BattingTab({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [initialized, setInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmedPlayerIds, setConfirmedPlayerIds] = useState<Set<string>>(new Set());
+
+  // Load attendance for lineup filtering
+  useEffect(() => {
+    async function loadAttendance() {
+      try {
+        const res = await fetch(`/api/gameday/${eventId}/attendance`);
+        const rsvps: { playerId: string; status: string }[] = await res.json();
+        const confirmed = new Set(
+          rsvps.filter((r) => r.status === "CONFIRMED").map((r) => r.playerId)
+        );
+        setConfirmedPlayerIds(confirmed);
+      } catch { /* ignore */ }
+    }
+    loadAttendance();
+  }, [eventId]);
 
   const loadBatting = useCallback(async () => {
     const res = await fetch(`/api/gameday/${eventId}/batting`);
@@ -210,7 +226,16 @@ function BattingTab({
   useEffect(() => { loadBatting(); }, [loadBatting]);
 
   async function initializeLineup() {
-    const playerOrder = players.map((p) => p.id);
+    const confirmedPlayers = confirmedPlayerIds.size > 0
+      ? players.filter((p) => confirmedPlayerIds.has(p.id))
+      : players;
+
+    if (confirmedPlayers.length === 0) {
+      addToast("No confirmed players to create lineup", "error");
+      return;
+    }
+
+    const playerOrder = confirmedPlayers.map((p) => p.id);
     const res = await fetch(`/api/gameday/${eventId}/batting`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -219,6 +244,44 @@ function BattingTab({
     if (res.ok) {
       await loadBatting();
       addToast("Batting lineup set", "success");
+    }
+  }
+
+  async function regenerateLineup() {
+    if (!window.confirm(
+      "Reset the batting lineup? This will clear all at-bat counts and rebuild the order from currently confirmed players."
+    )) return;
+
+    try {
+      // Re-fetch attendance to get latest confirmed players
+      const attRes = await fetch(`/api/gameday/${eventId}/attendance`);
+      const rsvps: { playerId: string; status: string }[] = await attRes.json();
+      const freshConfirmed = new Set(
+        rsvps.filter((r) => r.status === "CONFIRMED").map((r) => r.playerId)
+      );
+      setConfirmedPlayerIds(freshConfirmed);
+
+      const confirmedPlayers = freshConfirmed.size > 0
+        ? players.filter((p) => freshConfirmed.has(p.id))
+        : players;
+
+      if (confirmedPlayers.length === 0) {
+        addToast("No confirmed players to create lineup", "error");
+        return;
+      }
+
+      const playerOrder = confirmedPlayers.map((p) => p.id);
+      const res = await fetch(`/api/gameday/${eventId}/batting`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerOrder }),
+      });
+      if (res.ok) {
+        await loadBatting();
+        addToast("Batting lineup regenerated with confirmed players", "success");
+      }
+    } catch {
+      addToast("Failed to regenerate lineup", "error");
     }
   }
 
@@ -308,6 +371,10 @@ function BattingTab({
           <Undo2 className="h-5 w-5" />
         </Button>
       </div>
+
+      <Button onClick={regenerateLineup} variant="outline" size="sm" className="w-full text-muted">
+        <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Regenerate Lineup
+      </Button>
 
       <Card>
         <CardHeader><span className="font-semibold text-sm">Full Lineup</span></CardHeader>
@@ -475,6 +542,65 @@ function FieldingTab({
     addToast(`Positions auto-assigned for ${confirmedPlayers.length} confirmed players`, "info");
   }
 
+  async function regenerateFielding() {
+    if (!window.confirm(
+      `Reset fielding for Inning ${currentInning}? This will clear saved positions and outs for this inning, then auto-assign based on current attendance.`
+    )) return;
+
+    try {
+      // Re-fetch attendance to get latest confirmed players
+      const attRes = await fetch(`/api/gameday/${eventId}/attendance`);
+      const rsvps: { playerId: string; status: string }[] = await attRes.json();
+      const freshConfirmed = new Set(
+        rsvps.filter((r) => r.status === "CONFIRMED").map((r) => r.playerId)
+      );
+      setConfirmedPlayerIds(freshConfirmed);
+
+      const confirmedPlayers = players.filter((p) => freshConfirmed.has(p.id));
+
+      if (confirmedPlayers.length === 0) {
+        addToast("No confirmed players to assign", "error");
+        return;
+      }
+
+      // Build auto-assignments from fresh attendance
+      const fieldPositions = FIELD_POSITIONS.filter((p) => p.value !== "BENCH");
+      const offset = ((currentInning - 1) * fieldPositions.length) % confirmedPlayers.length;
+      const newAssignments: { playerId: string; position: string }[] = [];
+
+      confirmedPlayers.forEach((_, index) => {
+        const playerIndex = (index + offset) % confirmedPlayers.length;
+        const player = confirmedPlayers[playerIndex];
+        if (index < fieldPositions.length) {
+          newAssignments.push({ playerId: player.id, position: fieldPositions[index].value });
+        } else {
+          newAssignments.push({ playerId: player.id, position: "BENCH" });
+        }
+      });
+
+      // Non-confirmed players get BENCH
+      players.forEach((p) => {
+        if (!freshConfirmed.has(p.id)) {
+          newAssignments.push({ playerId: p.id, position: "BENCH" });
+        }
+      });
+
+      // Save directly to DB (POST deletes existing entries for this inning, then creates new)
+      const res = await fetch(`/api/gameday/${eventId}/fielding`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inning: currentInning, assignments: newAssignments }),
+      });
+
+      if (res.ok) {
+        await loadFielding();
+        addToast(`Inning ${currentInning} positions regenerated`, "success");
+      }
+    } catch {
+      addToast("Failed to regenerate fielding", "error");
+    }
+  }
+
   if (loading) return (
     <div className="space-y-4 animate-fade-in">
       <Skeleton className="h-16 w-full rounded-lg" />
@@ -547,6 +673,9 @@ function FieldingTab({
           <div className="flex justify-between items-center">
             <span className="font-semibold text-sm">Field Positions - Inning {currentInning}</span>
             <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={regenerateFielding} className="text-red-600 border-red-200 hover:bg-red-50">
+                <RotateCcw className="h-3 w-3 mr-1" /> Regenerate
+              </Button>
               <Button size="sm" variant="outline" onClick={autoAssignPositions}>
                 <Wand2 className="h-3 w-3 mr-1" /> Auto-Assign
               </Button>
