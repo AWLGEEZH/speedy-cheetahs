@@ -249,7 +249,7 @@ function BattingTab({
 
   async function regenerateLineup() {
     if (!window.confirm(
-      "Reset the batting lineup? This will clear all at-bat counts and rebuild the order from currently confirmed players."
+      "Reset the batting lineup? This will clear all at-bat counts and create a new randomized order from currently confirmed players."
     )) return;
 
     try {
@@ -270,7 +270,14 @@ function BattingTab({
         return;
       }
 
-      const playerOrder = confirmedPlayers.map((p) => p.id);
+      // Shuffle the order (Fisher-Yates)
+      const shuffled = [...confirmedPlayers];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      const playerOrder = shuffled.map((p) => p.id);
       const res = await fetch(`/api/gameday/${eventId}/batting`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
