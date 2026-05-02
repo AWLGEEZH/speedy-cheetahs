@@ -235,7 +235,14 @@ function BattingTab({
       return;
     }
 
-    const playerOrder = confirmedPlayers.map((p) => p.id);
+    // Shuffle the order (Fisher-Yates) so each game starts with a fresh randomized lineup
+    const shuffled = [...confirmedPlayers];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    const playerOrder = shuffled.map((p) => p.id);
     const res = await fetch(`/api/gameday/${eventId}/batting`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -524,13 +531,15 @@ function FieldingTab({
       return;
     }
 
-    // Rotate based on inning so players get different positions each inning
-    const offset = ((currentInning - 1) * fieldPositions.length) % confirmedPlayers.length;
-    const newAssignments: Record<string, string> = {};
+    // Shuffle confirmed players (Fisher-Yates) so each call produces a fresh randomized assignment
+    const shuffled = [...confirmedPlayers];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
 
-    confirmedPlayers.forEach((_, index) => {
-      const playerIndex = (index + offset) % confirmedPlayers.length;
-      const player = confirmedPlayers[playerIndex];
+    const newAssignments: Record<string, string> = {};
+    shuffled.forEach((player, index) => {
       if (index < fieldPositions.length) {
         newAssignments[player.id] = fieldPositions[index].value;
       } else {
@@ -572,12 +581,16 @@ function FieldingTab({
 
       // Build auto-assignments from fresh attendance
       const fieldPositions = FIELD_POSITIONS.filter((p) => p.value !== "BENCH");
-      const offset = ((currentInning - 1) * fieldPositions.length) % confirmedPlayers.length;
       const newAssignments: { playerId: string; position: string }[] = [];
 
-      confirmedPlayers.forEach((_, index) => {
-        const playerIndex = (index + offset) % confirmedPlayers.length;
-        const player = confirmedPlayers[playerIndex];
+      // Shuffle confirmed players (Fisher-Yates) so each regenerate produces a fresh randomized assignment
+      const shuffled = [...confirmedPlayers];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      shuffled.forEach((player, index) => {
         if (index < fieldPositions.length) {
           newAssignments.push({ playerId: player.id, position: fieldPositions[index].value });
         } else {
