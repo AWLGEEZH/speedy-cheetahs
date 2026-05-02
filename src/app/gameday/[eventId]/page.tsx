@@ -17,6 +17,15 @@ import { Users, ListOrdered, Diamond, ChevronRight, Undo2, Plus, CircleDot, Wand
 
 type Tab = "attendance" | "batting" | "fielding";
 
+function shuffle<T>(arr: T[]): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 interface GameEvent {
   id: string;
   title: string;
@@ -235,7 +244,7 @@ function BattingTab({
       return;
     }
 
-    const playerOrder = confirmedPlayers.map((p) => p.id);
+    const playerOrder = shuffle(confirmedPlayers).map((p) => p.id);
     const res = await fetch(`/api/gameday/${eventId}/batting`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -270,14 +279,7 @@ function BattingTab({
         return;
       }
 
-      // Shuffle the order (Fisher-Yates)
-      const shuffled = [...confirmedPlayers];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-
-      const playerOrder = shuffled.map((p) => p.id);
+      const playerOrder = shuffle(confirmedPlayers).map((p) => p.id);
       const res = await fetch(`/api/gameday/${eventId}/batting`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -517,7 +519,7 @@ function FieldingTab({
 
   function autoAssignPositions() {
     const fieldPositions = FIELD_POSITIONS.filter((p) => p.value !== "BENCH");
-    const confirmedPlayers = players.filter((p) => confirmedPlayerIds.has(p.id));
+    const confirmedPlayers = shuffle(players.filter((p) => confirmedPlayerIds.has(p.id)));
 
     if (confirmedPlayers.length === 0) {
       addToast("No confirmed players to assign", "error");
@@ -563,7 +565,7 @@ function FieldingTab({
       );
       setConfirmedPlayerIds(freshConfirmed);
 
-      const confirmedPlayers = players.filter((p) => freshConfirmed.has(p.id));
+      const confirmedPlayers = shuffle(players.filter((p) => freshConfirmed.has(p.id)));
 
       if (confirmedPlayers.length === 0) {
         addToast("No confirmed players to assign", "error");
