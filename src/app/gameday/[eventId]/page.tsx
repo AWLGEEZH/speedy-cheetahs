@@ -12,6 +12,7 @@ import { useToast, ToastProvider } from "@/components/ui/toast";
 import { usePolling } from "@/hooks/use-polling";
 import { cn, formatDateTime } from "@/lib/utils";
 import { FIELD_POSITIONS, OUTS_PER_INNING } from "@/lib/constants";
+import { deCollideBatting, deCollideFielding } from "@/lib/gameday-anti-repeat";
 import type { PlayerWithFamily, BattingEntryWithPlayer, FieldingEntryWithPlayer } from "@/types";
 import { Users, ListOrdered, Diamond, ChevronRight, Undo2, Plus, CircleDot, Wand2, RotateCcw } from "lucide-react";
 
@@ -196,8 +197,9 @@ function BattingTab({
   const [initialized, setInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [confirmedPlayerIds, setConfirmedPlayerIds] = useState<Set<string>>(new Set());
+  const [previousBatting, setPreviousBatting] = useState<Record<string, number>>({});
 
-  // Load attendance for lineup filtering
+  // Load attendance and previous-game data for lineup filtering & anti-repetition
   useEffect(() => {
     async function loadAttendance() {
       try {
@@ -209,7 +211,15 @@ function BattingTab({
         setConfirmedPlayerIds(confirmed);
       } catch { /* ignore */ }
     }
+    async function loadPreviousGame() {
+      try {
+        const res = await fetch(`/api/gameday/${eventId}/previous-game`);
+        const data = await res.json();
+        setPreviousBatting(data.battingByPlayer || {});
+      } catch { /* ignore */ }
+    }
     loadAttendance();
+    loadPreviousGame();
   }, [eventId]);
 
   const loadBatting = useCallback(async () => {
@@ -241,6 +251,8 @@ function BattingTab({
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    // Anti-repetition: ensure no player ends up in their previous game's batting slot
+    deCollideBatting(shuffled, previousBatting);
 
     const playerOrder = shuffled.map((p) => p.id);
     const res = await fetch(`/api/gameday/${eventId}/batting`, {
@@ -283,6 +295,8 @@ function BattingTab({
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
+      // Anti-repetition: ensure no player ends up in their previous game's batting slot
+      deCollideBatting(shuffled, previousBatting);
 
       const playerOrder = shuffled.map((p) => p.id);
       const res = await fetch(`/api/gameday/${eventId}/batting`, {
@@ -436,8 +450,9 @@ function FieldingTab({
   const [inningOuts, setInningOuts] = useState(0);
   const [outsPerInning, setOutsPerInning] = useState(OUTS_PER_INNING);
   const [confirmedPlayerIds, setConfirmedPlayerIds] = useState<Set<string>>(new Set());
+  const [previousFielding, setPreviousFielding] = useState<Record<number, Record<string, string>>>({});
 
-  // Load attendance for auto-assign
+  // Load attendance and previous-game fielding for auto-assign & anti-repetition
   useEffect(() => {
     async function loadAttendance() {
       try {
@@ -449,7 +464,15 @@ function FieldingTab({
         setConfirmedPlayerIds(confirmed);
       } catch { /* ignore */ }
     }
+    async function loadPreviousGame() {
+      try {
+        const res = await fetch(`/api/gameday/${eventId}/previous-game`);
+        const data = await res.json();
+        setPreviousFielding(data.fieldingByPlayer || {});
+      } catch { /* ignore */ }
+    }
     loadAttendance();
+    loadPreviousGame();
   }, [eventId]);
 
   const loadFielding = useCallback(async () => {
@@ -537,6 +560,8 @@ function FieldingTab({
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    // Anti-repetition: ensure no player ends up at the same position they had last game
+    deCollideFielding(shuffled, fieldPositions, previousFielding[currentInning] ?? {});
 
     const newAssignments: Record<string, string> = {};
     shuffled.forEach((player, index) => {
@@ -589,6 +614,8 @@ function FieldingTab({
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
+      // Anti-repetition: ensure no player ends up at the same position they had last game
+      deCollideFielding(shuffled, fieldPositions, previousFielding[currentInning] ?? {});
 
       shuffled.forEach((player, index) => {
         if (index < fieldPositions.length) {
