@@ -47,6 +47,9 @@ export async function GET(request: Request) {
             attendanceRsvps: { where: { status: "CONFIRMED" } },
           },
         },
+        gameState: {
+          select: { status: true },
+        },
       },
     });
 
