@@ -497,6 +497,22 @@ function FieldingTab({
 
   useEffect(() => { loadFielding(); }, [loadFielding]);
 
+  // Auto-populate positions when entering an inning with no saved assignments.
+  // Avoids the confusing "everyone on BENCH" state after auto-advance or fresh page load.
+  // Conditions: data loaded, attendance loaded, no saved entries for this inning,
+  // and assignments not already populated (manual edits or previous auto-populate).
+  useEffect(() => {
+    if (loading) return;
+    if (confirmedPlayerIds.size === 0) return;
+    if (Object.keys(assignments).length > 0) return;
+    const currentEntries = fieldingEntries.filter((e) => e.inning === currentInning);
+    if (currentEntries.length > 0) return;
+    autoAssignPositions(true);
+    // autoAssignPositions intentionally omitted from deps — it's a stable component-scope function
+    // and including it would require useCallback indirection. The guard conditions above prevent loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, confirmedPlayerIds, currentInning, fieldingEntries, assignments]);
+
   function assignPosition(playerId: string, position: string) {
     setAssignments((prev) => ({ ...prev, [playerId]: position }));
   }
@@ -545,12 +561,12 @@ function FieldingTab({
     setInningOuts(0);
   }
 
-  function autoAssignPositions() {
+  function autoAssignPositions(silent = false) {
     const fieldPositions = FIELD_POSITIONS.filter((p) => p.value !== "BENCH");
     const confirmedPlayers = players.filter((p) => confirmedPlayerIds.has(p.id));
 
     if (confirmedPlayers.length === 0) {
-      addToast("No confirmed players to assign", "error");
+      if (!silent) addToast("No confirmed players to assign", "error");
       return;
     }
 
@@ -580,7 +596,9 @@ function FieldingTab({
     });
 
     setAssignments(newAssignments);
-    addToast(`Positions auto-assigned for ${confirmedPlayers.length} confirmed players`, "info");
+    if (!silent) {
+      addToast(`Positions auto-assigned for ${confirmedPlayers.length} confirmed players`, "info");
+    }
   }
 
   async function regenerateFielding() {
@@ -723,7 +741,7 @@ function FieldingTab({
               <Button size="sm" variant="outline" onClick={regenerateFielding} className="text-red-600 border-red-200 hover:bg-red-50">
                 <RotateCcw className="h-3 w-3 mr-1" /> Regenerate
               </Button>
-              <Button size="sm" variant="outline" onClick={autoAssignPositions}>
+              <Button size="sm" variant="outline" onClick={() => autoAssignPositions()}>
                 <Wand2 className="h-3 w-3 mr-1" /> Auto-Assign
               </Button>
               <Button size="sm" onClick={saveFielding}>Save Positions</Button>
