@@ -507,8 +507,8 @@ function FieldingTab({
     if (Object.keys(assignments).length > 0) return;
     const currentEntries = fieldingEntries.filter((e) => e.inning === currentInning);
     if (currentEntries.length > 0) return;
-    autoAssignPositions(true);
-    // autoAssignPositions intentionally omitted from deps — it's a stable component-scope function
+    shufflePositions(true);
+    // shufflePositions intentionally omitted from deps — it's a stable component-scope function
     // and including it would require useCallback indirection. The guard conditions above prevent loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, confirmedPlayerIds, currentInning, fieldingEntries, assignments]);
@@ -561,22 +561,43 @@ function FieldingTab({
     setInningOuts(0);
   }
 
-  function autoAssignPositions(silent = false) {
+  /**
+   * Shuffles fielding positions locally. Re-fetches attendance first to pick up
+   * late arrivals/departures. Does NOT save — coach hits Save Positions to commit.
+   * When called silently (from the auto-populate effect), skips toasts and uses
+   * cached attendance to avoid an unnecessary fetch on initial load.
+   */
+  async function shufflePositions(silent = false) {
+    let activeConfirmed = confirmedPlayerIds;
+
+    // For user-initiated shuffles, refresh attendance to catch late arrivals/departures
+    if (!silent) {
+      try {
+        const attRes = await fetch(`/api/gameday/${eventId}/attendance`);
+        const rsvps: { playerId: string; status: string }[] = await attRes.json();
+        const freshConfirmed = new Set(
+          rsvps.filter((r) => r.status === "CONFIRMED").map((r) => r.playerId)
+        );
+        setConfirmedPlayerIds(freshConfirmed);
+        activeConfirmed = freshConfirmed;
+      } catch { /* fall back to cached confirmedPlayerIds */ }
+    }
+
     const fieldPositions = FIELD_POSITIONS.filter((p) => p.value !== "BENCH");
-    const confirmedPlayers = players.filter((p) => confirmedPlayerIds.has(p.id));
+    const confirmedPlayers = players.filter((p) => activeConfirmed.has(p.id));
 
     if (confirmedPlayers.length === 0) {
       if (!silent) addToast("No confirmed players to assign", "error");
       return;
     }
 
-    // Shuffle confirmed players (Fisher-Yates) so each call produces a fresh randomized assignment
+    // Fisher-Yates shuffle for randomized assignment each call
     const shuffled = [...confirmedPlayers];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    // Anti-repetition: ensure no player ends up at the same position they had last game
+    // Anti-repetition: avoid placing players at the same position they had last game
     deCollideFielding(shuffled, fieldPositions, previousFielding[currentInning] ?? {});
 
     const newAssignments: Record<string, string> = {};
@@ -590,79 +611,14 @@ function FieldingTab({
 
     // Non-confirmed players get BENCH
     players.forEach((p) => {
-      if (!confirmedPlayerIds.has(p.id)) {
+      if (!activeConfirmed.has(p.id)) {
         newAssignments[p.id] = "BENCH";
       }
     });
 
     setAssignments(newAssignments);
     if (!silent) {
-      addToast(`Positions auto-assigned for ${confirmedPlayers.length} confirmed players`, "info");
-    }
-  }
-
-  async function regenerateFielding() {
-    if (!window.confirm(
-      `Reset fielding for Inning ${currentInning}? This will clear saved positions and outs for this inning, then auto-assign based on current attendance.`
-    )) return;
-
-    try {
-      // Re-fetch attendance to get latest confirmed players
-      const attRes = await fetch(`/api/gameday/${eventId}/attendance`);
-      const rsvps: { playerId: string; status: string }[] = await attRes.json();
-      const freshConfirmed = new Set(
-        rsvps.filter((r) => r.status === "CONFIRMED").map((r) => r.playerId)
-      );
-      setConfirmedPlayerIds(freshConfirmed);
-
-      const confirmedPlayers = players.filter((p) => freshConfirmed.has(p.id));
-
-      if (confirmedPlayers.length === 0) {
-        addToast("No confirmed players to assign", "error");
-        return;
-      }
-
-      // Build auto-assignments from fresh attendance
-      const fieldPositions = FIELD_POSITIONS.filter((p) => p.value !== "BENCH");
-      const newAssignments: { playerId: string; position: string }[] = [];
-
-      // Shuffle confirmed players (Fisher-Yates) so each regenerate produces a fresh randomized assignment
-      const shuffled = [...confirmedPlayers];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      // Anti-repetition: ensure no player ends up at the same position they had last game
-      deCollideFielding(shuffled, fieldPositions, previousFielding[currentInning] ?? {});
-
-      shuffled.forEach((player, index) => {
-        if (index < fieldPositions.length) {
-          newAssignments.push({ playerId: player.id, position: fieldPositions[index].value });
-        } else {
-          newAssignments.push({ playerId: player.id, position: "BENCH" });
-        }
-      });
-
-      // Non-confirmed players get BENCH
-      players.forEach((p) => {
-        if (!freshConfirmed.has(p.id)) {
-          newAssignments.push({ playerId: p.id, position: "BENCH" });
-        }
-      });
-
-      // Save directly to DB (POST deletes existing entries for this inning, then creates new)
-      const res = await fetch(`/api/gameday/${eventId}/fielding`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inning: currentInning, assignments: newAssignments }),
-      });
-
-      if (res.ok) {
-        await loadFielding();
-        addToast(`Inning ${currentInning} positions regenerated`, "success");
-      }
-    } catch {
-      addToast("Failed to regenerate fielding", "error");
+      addToast(`Positions shuffled for ${confirmedPlayers.length} confirmed players`, "info");
     }
   }
 
@@ -738,11 +694,8 @@ function FieldingTab({
           <div className="flex justify-between items-center">
             <span className="font-semibold text-sm">Field Positions - Inning {currentInning}</span>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={regenerateFielding} className="text-red-600 border-red-200 hover:bg-red-50">
-                <RotateCcw className="h-3 w-3 mr-1" /> Regenerate
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => autoAssignPositions()}>
-                <Wand2 className="h-3 w-3 mr-1" /> Auto-Assign
+              <Button size="sm" variant="outline" onClick={() => shufflePositions()}>
+                <Wand2 className="h-3 w-3 mr-1" /> Shuffle
               </Button>
               <Button size="sm" onClick={saveFielding}>Save Positions</Button>
             </div>
